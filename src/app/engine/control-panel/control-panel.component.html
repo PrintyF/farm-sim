@@ -1,0 +1,13 @@
+<mat-card>
+    <mat-card-content>
+        <div class="controls">
+            <div class="buttons">
+                <button class="playButton" mat-flat-button (click)="onPlayButtonClick()">{{ playButtonText }}</button>
+            </div>
+            <mat-divider></mat-divider>
+            <mat-slider class="timeline" min="0" max="60" step="0.01">
+                <input matSliderThumb [value]="(time$ | async)">
+            </mat-slider>    
+        </div>
+    </mat-card-content>
+</mat-card>
