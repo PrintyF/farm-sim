@@ -6,8 +6,30 @@
             </div>
             <mat-divider></mat-divider>
             <mat-slider class="timeline" min="0" max="60" step="0.01">
-                <input matSliderThumb [value]="(time$ | async)">
-            </mat-slider>    
+                <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="(time$ | async)">
+            </mat-slider>
+            <div class="timer">
+                {{time$ | async | number: '1.1-1'}}
+            </div>
         </div>
+        @for (unit of selectedUnits$ | async; track $index) {
+            <div class="unit">
+                <mat-form-field>
+                    <mat-label>Name :</mat-label>
+                    <input matInput [disabled]="true" [value]="unit.name">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Position</mat-label>
+                    @let x = (unit.posX | async);
+                    <input matInput [disabled]="true" [value]="'x: ' + x">
+                    @let y = (unit.posY | async);
+                    <input matInput [disabled]="true" [value]="'y: ' + y">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Color :</mat-label>
+                    <input matInput [disabled]="true" [value]="unit.color">
+                </mat-form-field>
+            </div>
+        }
     </mat-card-content>
 </mat-card>
