@@ -20,7 +20,7 @@ import { Unit } from '../scene/classes/unit';
 export class ControlPanelComponent implements OnInit {
 
   time$: BehaviorSubject<number> | undefined;
-  selectedUnits$: BehaviorSubject<Unit[]> | undefined;
+  selectedUnits$: BehaviorSubject<Set<Unit>> | undefined;
 
   constructor(private sceneControlService: SceneControlService) {
   }

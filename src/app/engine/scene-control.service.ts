@@ -11,7 +11,7 @@ export class SceneControlService {
   timer$ = new BehaviorSubject<number>(0);
   timerSubscription: Subscription = new Subscription();
 
-  selectedUnits = new BehaviorSubject<Unit[]>([]);
+  selectedUnits = new BehaviorSubject<Set<Unit>>(new Set());
 
   private ctx: CanvasRenderingContext2D | undefined;
   population = new Population(5);
@@ -69,20 +69,31 @@ export class SceneControlService {
         this.ctx.arc(unit.posX.value, unit.posY.value, 5, 0, Math.PI * 2);
         this.ctx.fill();
       }
+
+      if (this.selectedUnits.value.has(unit)) {
+        this.ctx.beginPath();
+        this.ctx.arc(unit.posX.value, unit.posY.value, 5 + 5, 0, 2 * Math.PI);
+        this.ctx.strokeStyle = 'red';
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+        this.ctx.closePath();    
+      }
     }
   }
 
   selectEvent(clickX: number, clickY: number) {
-    this.selectedUnits.next([]);
+    this.selectedUnits.next(new Set());
     this.population.units.forEach(unit => {
       const distance = Math.sqrt(
         Math.pow(clickX - unit.getPostionByIndex(this.timer$.getValue() * 10)?.x, 2) +
         Math.pow(clickY - unit.getPostionByIndex(this.timer$.getValue() * 10)?.y, 2));
       if (distance < 5) {
         const currentUnits = this.selectedUnits.getValue();
-        this.selectedUnits.next([...currentUnits, unit]);
+        currentUnits.add(unit);
+        this.selectedUnits.next(currentUnits);
       }
     });
+    this.updateCanvas();
   }
 
   constructor() { }
