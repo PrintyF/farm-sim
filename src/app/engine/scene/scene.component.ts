@@ -1,6 +1,6 @@
 import { tap } from 'rxjs';
 import { SceneControlService } from './../scene-control.service';
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-scene',

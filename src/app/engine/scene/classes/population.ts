@@ -8,5 +8,16 @@ export class Population {
         this.units.push(new Unit())
       }
     }
+
+    get alpha(): Unit {
+      let alpha = this.units[0];
+      this.units.forEach((unit) => {
+        if (unit.distanceToPoint(0, 0) < alpha.distanceToPoint(0, 0)) {
+          alpha = unit;
+        }
+
+      });
+      return alpha;
+    }
   }
   

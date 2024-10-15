@@ -11,17 +11,25 @@ export class SceneControlService {
   timer$ = new BehaviorSubject<number>(0);
   timerSubscription: Subscription = new Subscription();
 
+  private alphaMarkedSubject = new BehaviorSubject<boolean>(false);
+  alphaMarked$ = this.alphaMarkedSubject.asObservable();
+
   selectedUnits = new BehaviorSubject<Set<Unit>>(new Set());
-
+  
   private ctx: CanvasRenderingContext2D | undefined;
-  population = new Population(5);
-
+  population = new Population(25);
+  
   initContext(ctx : CanvasRenderingContext2D | null) : void {
     if (ctx) {
       this.ctx = ctx;
     }
   }
 
+  toggleAlphaMarked(isMarked: boolean) {
+    this.alphaMarkedSubject.next(isMarked);
+    this.updateCanvas();
+  }
+  
   toggleSimulation(): void {
     this.isSimulationRunning.next(!this.isSimulationRunning.getValue());
     if (this.isSimulationRunning.getValue()) {
@@ -34,11 +42,14 @@ export class SceneControlService {
       this.timerSubscription.unsubscribe();
     }
   }
-
-
+  
+  
   updateCanvas(): void {
     this.clearCanvas();
     this.drawUnits();
+    if (this.alphaMarkedSubject.value) {
+      this.cercleUnit(this.population.alpha, "blue");
+    }
     if (this.isSimulationRunning.getValue()) {
       requestAnimationFrame(() => this.updateCanvas());
     }
@@ -62,32 +73,35 @@ export class SceneControlService {
     if (this.ctx) {
       this.ctx.fillStyle = unit.color;
       this.ctx.beginPath();
-      const postion = unit.getPostionByIndex(this.timer$.getValue() * 10);
+      const postion = unit.getPostionByIndex(this.timer$.getValue());
       unit.posX.next(postion?.x);
       unit.posY.next(postion?.y);
       if (postion) {
-        this.ctx.arc(unit.posX.value, unit.posY.value, 5, 0, Math.PI * 2);
+        this.ctx.arc(unit.posX.value, unit.posY.value, unit.size, 0, Math.PI * 2);
         this.ctx.fill();
       }
-
+      
       if (this.selectedUnits.value.has(unit)) {
-        this.ctx.beginPath();
-        this.ctx.arc(unit.posX.value, unit.posY.value, 5 + 5, 0, 2 * Math.PI);
-        this.ctx.strokeStyle = 'red';
-        this.ctx.lineWidth = 4;
-        this.ctx.stroke();
-        this.ctx.closePath();    
+        this.cercleUnit(unit);    
       }
     }
   }
-
+  
+  cercleUnit(unit: Unit, color = 'red') {
+    if (this.ctx) {
+      this.ctx.beginPath();
+      this.ctx.arc(unit.posX.value, unit.posY.value, unit.size + 5, 0, 2 * Math.PI);
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 4;
+      this.ctx.stroke();
+      this.ctx.closePath();
+    }
+  }
+  
   selectEvent(clickX: number, clickY: number) {
     this.selectedUnits.next(new Set());
     this.population.units.forEach(unit => {
-      const distance = Math.sqrt(
-        Math.pow(clickX - unit.getPostionByIndex(this.timer$.getValue() * 10)?.x, 2) +
-        Math.pow(clickY - unit.getPostionByIndex(this.timer$.getValue() * 10)?.y, 2));
-      if (distance < 5) {
+      if (unit.distanceToPoint(clickX, clickY) < unit.size) {
         const currentUnits = this.selectedUnits.getValue();
         currentUnits.add(unit);
         this.selectedUnits.next(currentUnits);
@@ -95,6 +109,6 @@ export class SceneControlService {
     });
     this.updateCanvas();
   }
-
+  
   constructor() { }
 }

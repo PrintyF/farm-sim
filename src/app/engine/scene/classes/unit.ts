@@ -7,7 +7,9 @@ export class Unit {
     posY = new BehaviorSubject(0);
     color = uniqueNamesGenerator({dictionaries: [colors]});
     actions: number[] = []
+    size = 15;
     postions: {x:number, y:number}[] = [];
+
     constructor() {
         
         this.posX.next(500);
@@ -32,9 +34,15 @@ export class Unit {
             this.postions.push({x:x, y:y})        
         }
     }
+
+    distanceToPoint(x: number, y: number): number {
+        return Math.sqrt(
+            Math.pow(x - this.posX.value, 2) +
+            Math.pow(y - this.posY.value, 2));    
+    }
     
     getPostionByIndex(index: number): {x: number, y: number} {
-        return this.postions.at(index) || {x: 0, y: 0};
+        return this.postions.at(index * 10) || {x: 0, y: 0};
     }
     
 }
