@@ -1,3 +1,4 @@
+import { Population } from './../scene/classes/population';
 import { MatInputModule } from '@angular/material/input';
 import { SceneControlService } from './../scene-control.service';
 import { Component, OnInit } from '@angular/core';
@@ -23,6 +24,7 @@ export class ControlPanelComponent implements OnInit {
   time$: BehaviorSubject<number> | undefined;
   selectedUnits$: BehaviorSubject<Set<Unit>> | undefined;
   alphaMarked = false;
+  population: Population | undefined;
 
   constructor(private sceneControlService: SceneControlService) {
   }
@@ -31,8 +33,13 @@ export class ControlPanelComponent implements OnInit {
     this.sceneControlService.alphaMarked$.subscribe((value) => {
       this.alphaMarked = value;
     });
+    this.population = this.sceneControlService.population;
     this.time$ = this.sceneControlService.timer$;
     this.selectedUnits$ = this.sceneControlService.selectedUnits;
+  }
+
+  reproducePopulation(): void {
+    this.sceneControlService.toggleReproduction();
   }
 
   markAlpha(checked: boolean) {

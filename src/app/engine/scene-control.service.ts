@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, interval, Subscription, takeWhile } from 'rxjs';
 import { Unit } from './scene/classes/unit';
 
+const TIMER = 60000;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,6 +27,11 @@ export class SceneControlService {
     }
   }
 
+  toggleReproduction(): void {
+    this.population.reproduce();
+    this.updateCanvas();
+  }
+
   toggleAlphaMarked(isMarked: boolean) {
     this.alphaMarkedSubject.next(isMarked);
     this.updateCanvas();
@@ -34,7 +41,7 @@ export class SceneControlService {
     this.isSimulationRunning.next(!this.isSimulationRunning.getValue());
     if (this.isSimulationRunning.getValue()) {
       this.timerSubscription = interval(100).pipe(
-        takeWhile(() => this.timer$.value < 60)
+        takeWhile(() => this.timer$.value < TIMER/1000)
       ).subscribe(() => {
         this.timer$.next(this.timer$.value + 0.1);
       });
@@ -46,9 +53,18 @@ export class SceneControlService {
   
   updateCanvas(): void {
     this.clearCanvas();
+    if (this.ctx) {
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0,  5, 0, 2 * Math.PI);
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineWidth = 4;
+      this.ctx.stroke();
+      this.ctx.closePath();
+    }
+
     this.drawUnits();
     if (this.alphaMarkedSubject.value) {
-      this.cercleUnit(this.population.alpha, "blue");
+      this.cercleUnit(this.population.currentAlpha, "blue");
     }
     if (this.isSimulationRunning.getValue()) {
       requestAnimationFrame(() => this.updateCanvas());
@@ -73,7 +89,8 @@ export class SceneControlService {
     if (this.ctx) {
       this.ctx.fillStyle = unit.color;
       this.ctx.beginPath();
-      const postion = unit.getPostionByIndex(this.timer$.getValue());
+      // console.log(this.timer$.getValue()/unit.postions.length*6000000);
+      const postion = unit.getPostionByIndex(this.timer$.getValue()/unit.postions.length*60000);
       unit.posX.next(postion?.x);
       unit.posY.next(postion?.y);
       if (postion) {

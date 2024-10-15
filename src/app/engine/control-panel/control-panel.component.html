@@ -12,6 +12,8 @@
                 {{time$ | async | number: '1.1-1'}}
             </div>
             <mat-checkbox [(ngModel)]="alphaMarked" (ngModelChange)="markAlpha($event)">Mark alpha</mat-checkbox>
+            <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
+            {{population?.fitness | number: '1.1-1'}}
         </div>
         @for (unit of selectedUnits$ | async; track $index) {
             <div class="unit">
