@@ -13,7 +13,7 @@ export class Population {
     let alpha = this.units[0];
     this.units.forEach((unit) => {
       if (unit != alpha && 
-          unit.distanceToPoint(0, 0) < alpha.distanceToPoint(0, 0)) {
+          unit.distanceToPoint(1000, 500) < alpha.distanceToPoint(1000, 500)) {
         alpha = unit;
       }
     });
@@ -24,22 +24,20 @@ export class Population {
     let alpha = this.units[0];
     this.units.forEach((unit) => {
       if (unit != alpha &&
-          unit.lastDistanceToPoint(0, 0) < alpha.lastDistanceToPoint(0, 0)) {
+          unit.fitness < alpha.fitness) {
         alpha = unit;
       }
     });
     return alpha;
   }
-
-  get fitness(): number {
-    return this.alpha.lastDistanceToPoint(0, 0);
-  }
   
   reproduce() {
     this.units.forEach((unit) => {
+      if (unit != this.alpha) {
         unit.combine(this.alpha);
         unit.mutate();
         unit.initPositions();
+      }
     });
   }
   

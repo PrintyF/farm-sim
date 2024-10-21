@@ -19,7 +19,7 @@ export class SceneControlService {
   selectedUnits = new BehaviorSubject<Set<Unit>>(new Set());
   
   private ctx: CanvasRenderingContext2D | undefined;
-  population = new Population(25);
+  population = new Population(50);
   
   initContext(ctx : CanvasRenderingContext2D | null) : void {
     if (ctx) {
@@ -40,10 +40,10 @@ export class SceneControlService {
   toggleSimulation(): void {
     this.isSimulationRunning.next(!this.isSimulationRunning.getValue());
     if (this.isSimulationRunning.getValue()) {
-      this.timerSubscription = interval(100).pipe(
-        takeWhile(() => this.timer$.value < TIMER/1000)
+      this.timerSubscription = interval(10).pipe(
+        takeWhile(() => this.timer$.value < TIMER/100)
       ).subscribe(() => {
-        this.timer$.next(this.timer$.value + 0.1);
+        this.timer$.next(this.timer$.value + 0.01);
       });
     } else {
       this.timerSubscription.unsubscribe();
@@ -55,7 +55,7 @@ export class SceneControlService {
     this.clearCanvas();
     if (this.ctx) {
       this.ctx.beginPath();
-      this.ctx.arc(0, 0,  5, 0, 2 * Math.PI);
+      this.ctx.arc(1000, 500,  50, 0, 2 * Math.PI);
       this.ctx.strokeStyle = "black";
       this.ctx.lineWidth = 4;
       this.ctx.stroke();
@@ -64,7 +64,7 @@ export class SceneControlService {
 
     this.drawUnits();
     if (this.alphaMarkedSubject.value) {
-      this.cercleUnit(this.population.currentAlpha, "blue");
+      this.cercleUnit(this.population.currentAlpha, "blue", this.population.currentAlpha.size + 5);
     }
     if (this.isSimulationRunning.getValue()) {
       requestAnimationFrame(() => this.updateCanvas());
@@ -89,25 +89,26 @@ export class SceneControlService {
     if (this.ctx) {
       this.ctx.fillStyle = unit.color;
       this.ctx.beginPath();
-      // console.log(this.timer$.getValue()/unit.postions.length*6000000);
-      const postion = unit.getPostionByIndex(this.timer$.getValue()/unit.postions.length*60000);
+      const postion = unit.getPostionByIndex(this.timer$.getValue()/unit.actions.length*TIMER);
       unit.posX.next(postion?.x);
       unit.posY.next(postion?.y);
+      unit.angle.next(postion?.angle);
+      unit.speed.next(postion?.speed);
       if (postion) {
         this.ctx.arc(unit.posX.value, unit.posY.value, unit.size, 0, Math.PI * 2);
         this.ctx.fill();
       }
-      
+      this.cercleUnit(unit, "black", unit.size);
       if (this.selectedUnits.value.has(unit)) {
-        this.cercleUnit(unit);    
+        this.cercleUnit(unit, unit.color, unit.size + 5);    
       }
     }
   }
   
-  cercleUnit(unit: Unit, color = 'red') {
+  cercleUnit(unit: Unit, color = 'red', size: number) {
     if (this.ctx) {
       this.ctx.beginPath();
-      this.ctx.arc(unit.posX.value, unit.posY.value, unit.size + 5, 0, 2 * Math.PI);
+      this.ctx.arc(unit.posX.value, unit.posY.value, size, 0, 2 * Math.PI);
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 4;
       this.ctx.stroke();
