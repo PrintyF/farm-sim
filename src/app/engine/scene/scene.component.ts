@@ -1,6 +1,8 @@
 import { tap } from 'rxjs';
-import { SceneControlService } from './../scene-control.service';
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { SceneControlService } from '../scene-control.service';
+import { SimulationService } from './simulation/simulation.service';
+import { RenderingService } from './rendering/rendering.service';
 
 @Component({
   selector: 'app-scene',
@@ -12,18 +14,19 @@ import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 export class SceneComponent implements AfterViewInit {
   @ViewChild('simulationCanvas') canvasRef: ElementRef<HTMLCanvasElement> | undefined;
   
-  constructor(private sceneControlService: SceneControlService) {}
+  constructor(private simualationService: SimulationService,
+              private renderingService: RenderingService,
+              private sceneControlService: SceneControlService) {}
   
   ngAfterViewInit() {
-    
     if (this.canvasRef) {
       this.canvasRef.nativeElement.width = window.innerWidth;
       this.canvasRef.nativeElement.height = window.innerHeight;
-      this.sceneControlService.initContext(this.canvasRef.nativeElement.getContext('2d'));
+      this.renderingService.initContext(this.canvasRef.nativeElement.getContext('2d'));
     }
-    this.sceneControlService.isSimulationRunning.pipe((tap((value) => {
+    this.simualationService.isSimulationRunning.pipe((tap((value) => {
       if (value) {
-        this.sceneControlService.updateCanvas();
+        this.sceneControlService.renderLoop();
       }
     }))).subscribe();
   }
@@ -38,7 +41,7 @@ export class SceneComponent implements AfterViewInit {
       const clickX = (event.clientX - rect.left) * scaleX;
       const clickY = (event.clientY - rect.top) * scaleY;
   
-      this.sceneControlService.selectEvent(clickX, clickY);
+      this.sceneControlService.selectEvent(clickX, clickY, this.simualationService.$timer.getValue());
     }
   }
 }

@@ -9,14 +9,7 @@ export class Worldmap {
   start: { x: number; y: number };
   objective: { x: number; y: number };
 
-  constructor() {
-    this.width = 0;
-    this.height = 0;
-    this.start = { x: 0, y: 0 };
-    this.objective = { x: 1, y: 1};
-  }
-
-  init(map: MapData) {
+  constructor(map: MapData) {
     this.walls = map.walls;
     this.objective = map.objective;
     this.start = map.start;

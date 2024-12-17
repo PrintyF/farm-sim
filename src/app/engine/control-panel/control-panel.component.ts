@@ -1,4 +1,4 @@
-import { Population } from './../scene/classes/population';
+import { Population } from '../scene/classes/Population';
 import { MatInputModule } from '@angular/material/input';
 import { SceneControlService } from './../scene-control.service';
 import { Component, OnInit } from '@angular/core';
@@ -10,9 +10,11 @@ import { MatCardModule } from '@angular/material/card';
 import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Unit } from '../scene/classes/unit';
+import { Unit } from '../scene/classes/Unit';
 import { TICK_RATE, TIMER } from '../scene/configuration';
 import { Worldmap } from '../scene/classes/Worldmap';
+import { SimulationService } from '../scene/simulation/simulation.service';
+import { SelectionService } from '../scene/selection/selection.service';
 
 @Component({
   selector: 'app-control-panel',
@@ -26,15 +28,18 @@ export class ControlPanelComponent implements OnInit {
   time$: BehaviorSubject<number> | undefined;
   $selectedUnits: BehaviorSubject<Set<Unit>> | undefined;
   alphaMarked = false;
-  population: Population = new Population(0, new Worldmap());
+  population: Population | null = null;
   animationDuration = TIMER * TICK_RATE;
   tickRate = TICK_RATE;
   $displaySlectedUnits : Observable<any>;
 
   selectedFile: File | null = null;
 
-  constructor(private sceneControlService: SceneControlService) {
-    this.$displaySlectedUnits = combineLatest([this.sceneControlService.$timer, this.sceneControlService.selectedUnits]).pipe(
+  constructor(private sceneControlService: SceneControlService,
+              private simulationSerice: SimulationService,
+              private selectionService: SelectionService
+  ) {
+    this.$displaySlectedUnits = combineLatest([this.simulationSerice.$timer, this.selectionService.selectedUnits]).pipe(
       map(([tick, units]: [number, Set<Unit>]) => {
           return Array.from(units).map(unit => ({
           name: unit.name,
@@ -46,14 +51,14 @@ export class ControlPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
-    this.sceneControlService.initPopulation();
-    this.sceneControlService.alphaMarked$.subscribe((value) => {
+    this.selectionService.alphaMarked$.subscribe((value) => {
       this.alphaMarked = value;
     });
-    this.population = this.sceneControlService.population;
-    this.time$ = this.sceneControlService.$timer;
-    this.$selectedUnits = this.sceneControlService.selectedUnits;
+    if (this.sceneControlService.population) {
+      this.population = this.sceneControlService.population;
+    }
+    this.time$ = this.simulationSerice.$timer;
+    this.$selectedUnits = this.selectionService.selectedUnits;
   }
 
   reproducePopulation(): void {
@@ -61,17 +66,19 @@ export class ControlPanelComponent implements OnInit {
   }
 
   markAlpha(checked: boolean): void {
-    this.sceneControlService.toggleAlphaMarked(checked);
+    this.selectionService.toggleAlphaMarked(checked);
   }
   
   onPlayButtonClick(): void {
-    this.population = this.sceneControlService.population;
-    this.sceneControlService.toggleSimulation();
+    if (this.sceneControlService.population) {
+      this.population = this.sceneControlService.population;
+    }
+    this.simulationSerice.toggleSimulation();
   }
 
   warpTo(value: number) {
     this.time$?.next(value);
-    this.sceneControlService.updateCanvas();
+    this.sceneControlService.renderLoop();
   }
 
   openNeuralNetworkDisplay(index: number): void {
@@ -82,7 +89,7 @@ export class ControlPanelComponent implements OnInit {
   }
 
   get playButtonText() : "Play" | "Pause" {
-    return this.sceneControlService.isSimulationRunning.getValue() ? "Pause" : "Play";
+    return this.simulationSerice.isSimulationRunning.getValue() ? "Pause" : "Play";
   }
   
   

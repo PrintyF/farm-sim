@@ -13,7 +13,7 @@
                 </div>
                 <mat-checkbox [(ngModel)]="alphaMarked" (ngModelChange)="markAlpha($event)">Mark alpha</mat-checkbox>
                 <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
-                alpha fitness {{population.alpha.fitness| number: '1.1-1'}}    
+                alpha fitness {{population?.alpha?.fitness| number: '1.1-1'}}    
         </div>
         @for (unit of $displaySlectedUnits | async; track $index) {
             <div class="unit">

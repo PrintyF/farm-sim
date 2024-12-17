@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
+import { Worldmap } from '../classes/Worldmap';
 
 export interface MapData {
   height: number,
@@ -14,9 +15,17 @@ export interface MapData {
   providedIn: 'root',
 })
 export class MapService {
-  constructor(private http: HttpClient) {}
+
+  wmap: null | Worldmap = null;
+
+  constructor(private http: HttpClient) {
+  }
 
   getMapData(): Observable<MapData> {
-    return this.http.get<MapData>('map_001.json');
+    return this.http.get<MapData>('map_001.json').pipe(
+      tap((map) => {
+      this.wmap = new Worldmap(map);
+    })
+  );
   }
 }

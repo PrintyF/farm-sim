@@ -1,5 +1,5 @@
 import { OBJ_POS_X, OBJ_POS_Y } from "../configuration";
-import { Unit } from "./unit";
+import { Unit } from "./Unit";
 import { Worldmap } from "./Worldmap";
 
 export class Population {
@@ -22,7 +22,7 @@ export class Population {
     return alpha;
   }
 
-  get alpha(): Unit {
+  get alpha(): Unit { 
     let alpha = this.units[0];
     this.units.forEach((unit) => {
       if (unit != alpha &&
@@ -33,7 +33,7 @@ export class Population {
     return alpha;
   }
   
-  reproduce() {
+  reproduce(): void {
     this.units.forEach((unit) => {
       if (unit != this.alpha) {
         unit.combine(this.alpha);
