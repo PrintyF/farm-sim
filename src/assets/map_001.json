@@ -1,0 +1,10 @@
+{
+  "width": 100,
+  "height": 100,
+  "start": { "x": 10, "y": 10 },
+  "objective": { "x": 20, "y": 20 },
+  "walls": [
+    { "x": 5, "y": 5, "width": 10, "height": 2 },
+    { "x": 15, "y": 10, "width": 3, "height": 35 }
+  ]
+}

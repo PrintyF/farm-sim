@@ -1,19 +1,21 @@
+import { OBJ_POS_X, OBJ_POS_Y } from "../configuration";
 import { Unit } from "./unit";
+import { Worldmap } from "./Worldmap";
 
 export class Population {
   units: Unit[] = [];
   
-  constructor(size: number) {
+  constructor(size: number, wmap: Worldmap) {
     for (let i = 0; i < size; i++) {
-      this.units.push(new Unit())
+      this.units.push(new Unit(wmap))
     }
   }
   
-  get currentAlpha(): Unit {
+  currentAlpha(tick: number): Unit {
     let alpha = this.units[0];
     this.units.forEach((unit) => {
       if (unit != alpha && 
-          unit.distanceToPoint(1000, 500) < alpha.distanceToPoint(1000, 500)) {
+          unit.distanceToPoint(OBJ_POS_X, OBJ_POS_Y, tick) < alpha.distanceToPoint(OBJ_POS_X, OBJ_POS_Y, tick)) {
         alpha = unit;
       }
     });
@@ -36,7 +38,7 @@ export class Population {
       if (unit != this.alpha) {
         unit.combine(this.alpha);
         unit.mutate();
-        unit.initPositions();
+        unit.initUnit();
       }
     });
   }

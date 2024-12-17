@@ -5,38 +5,49 @@
                 <button class="playButton" mat-flat-button (click)="onPlayButtonClick()">{{ playButtonText }}</button>
             </div>
             <mat-divider></mat-divider>
-            <mat-slider class="timeline" min="0" max="60" step="0.01">
-                <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="(time$ | async)">
-            </mat-slider>
-            <div class="timer">
-                {{time$ | async | number: '1.1-1'}}
-            </div>
-            <mat-checkbox [(ngModel)]="alphaMarked" (ngModelChange)="markAlpha($event)">Mark alpha</mat-checkbox>
-            <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
-            alpha fitness {{population?.alpha?.fitness| number: '1.1-1'}}
+                <mat-slider class="timeline" min="0" [max]="animationDuration" step="tickRate">
+                    <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="(time$ | async)">
+                </mat-slider>
+                <div class="timer">
+                    {{time$ | async | number: '1.1-1'}}
+                </div>
+                <mat-checkbox [(ngModel)]="alphaMarked" (ngModelChange)="markAlpha($event)">Mark alpha</mat-checkbox>
+                <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
+                alpha fitness {{population.alpha.fitness| number: '1.1-1'}}    
         </div>
-        @for (unit of selectedUnits$ | async; track $index) {
+        @for (unit of $displaySlectedUnits | async; track $index) {
             <div class="unit">
                 <mat-form-field>
-                    <mat-label>Name :</mat-label>
+                    <mat-label (click)="openNeuralNetworkDisplay($index)">Name :</mat-label>
                     <input matInput [disabled]="true" [value]="unit.name">
                 </mat-form-field>
                 <mat-form-field>
                     <mat-label>Position</mat-label>
-                    @let x = (unit.posX | async);
-                    <input matInput [disabled]="true" [value]="'x: ' + x">
-                    @let y = (unit.posY | async);
-                    <input matInput [disabled]="true" [value]="'y: ' + y">
-                    @let angle = (unit.angle | async);
-                    <input matInput [disabled]="true" [value]="'angle: ' + angle">
-                    @let speed = (unit.speed | async);
-                    <input matInput [disabled]="true" [value]="'speed: ' + speed">
+                    <input matInput [disabled]="true" [value]="'x: ' + unit.state.x">
+                    <input matInput [disabled]="true" [value]="'y: ' + unit.state.y">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>angle</mat-label>
+                    <input matInput [disabled]="true" [value]="unit.state.angle!%360">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>speed</mat-label>
+                    <input matInput [disabled]="true" [value]="unit.state.speed">
                 </mat-form-field>
                 <mat-form-field>
                     <mat-label>Color :</mat-label>
                     <input matInput [disabled]="true" [value]="unit.color">
                 </mat-form-field>
             </div>
+            @if (($displaySlectedUnits | async)?.length === 1) {
+                @for (layer of unit.state.neuralNetwork; track $index) {
+                    <div>
+                        @for (neuron of layer; track $index) {
+                            <span> {{neuron}} </span>
+                        }
+                    </div>
+                }
+            }
         }
     </mat-card-content>
 </mat-card>
