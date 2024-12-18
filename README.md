@@ -16,12 +16,6 @@ The project is being developed using **Test-Driven Development (TDD)** principle
 - **Agent Selection**: Select individual agents from the population to track their stats (e.g., position, speed, distance to target).
 - **Basic Simulation**: Agents move toward a point on a 2D canvas, showcasing simple AI behavior.
 
-> **Note:** At this stage, there are no blockers or obstacles in the 2D space for the agents.
-
-## Technologies Used
-- **Angular**: Frontend framework for building the application.
-- **Angular Material**: UI component library used to create a clean, responsive interface.
-- **TDD**: Test-Driven Development approach to ensure features are thoroughly tested.
 
 ## Getting Started
 1. Clone the repository:
@@ -31,3 +25,9 @@ The project is being developed using **Test-Driven Development (TDD)** principle
 2. npm i
 
 3. npm start
+
+## Todo ::
+
+wall bug
+train ai
+test

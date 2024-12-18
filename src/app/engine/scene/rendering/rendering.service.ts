@@ -55,7 +55,6 @@ export class RenderingService {
   }
 
   drawRays(rays: Ray[]): void {
-
     rays.forEach((ray) => {
       if (this.ctx) {
         if (this.mapService.wmap) {
@@ -90,7 +89,7 @@ export class RenderingService {
     }
   }
 
-  cercleUnit(unit: Unit, color = 'red', size: number, timer: number) {
+  cercleUnit(unit: Unit, color: string, size: number, timer: number) {
     if (this.ctx) {
       const tick = timer;
       const unitState = unit.getStateByTick(tick);
@@ -103,10 +102,17 @@ export class RenderingService {
     } 
   }
 
-  drawSelectedUnitsCirle(units: Set<Unit>, timer: number) {
+  drawSelectedUnitHighlight(units: Set<Unit>, timer: number) {
+    const circleOffset = 5;
     units.forEach((unit) => {
-      this.cercleUnit(unit, unit.color, unit.size, timer);
+      this.cercleUnit(unit, 'red', unit.size + circleOffset, timer);
     });
+    if (units.size === 1) {
+      units.forEach((unit) => {
+        this.drawRays(unit.getStateByTick(timer).rays);
+      })
+    }
+
   }
 
 

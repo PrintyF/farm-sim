@@ -38,7 +38,7 @@ export class Population {
       if (unit != this.alpha) {
         unit.combine(this.alpha);
         unit.mutate();
-        unit.initUnit();
+        unit.computeUnit();
       }
     });
   }
