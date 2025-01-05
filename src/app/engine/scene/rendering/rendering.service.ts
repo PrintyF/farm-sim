@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Ray } from '../classes/Ray';
 import { Unit } from '../classes/Unit';
 import { CELL_SIZE, OBJ_POS_X, OBJ_POS_Y, OBJ_SIZE } from '../configuration';
 import { Worldmap } from '../classes/Worldmap';
@@ -54,7 +53,8 @@ export class RenderingService {
     }
   }
 
-  drawRays(rays: Ray[]): void {
+  drawRays(unit: Unit, timer: number): void {
+    const rays = unit.getStateByTick(timer)!.rays;
     rays.forEach((ray) => {
       if (this.ctx) {
         if (this.mapService.wmap) {
@@ -83,7 +83,7 @@ export class RenderingService {
       this.ctx.fillStyle = unit.color;
       this.ctx.beginPath();
       const state = unit.getStateByTick(tick);
-      this.ctx.arc(state.x, state.y, unit.size, 0, Math.PI * 2);
+      this.ctx.arc(state!.x, state!.y, unit.size, 0, Math.PI * 2);
       this.ctx.fill();
       this.cercleUnit(unit, "black", unit.size, timer);
     }
@@ -94,7 +94,7 @@ export class RenderingService {
       const tick = timer;
       const unitState = unit.getStateByTick(tick);
       this.ctx.beginPath();
-      this.ctx.arc(unitState.x, unitState.y, size, 0, 2 * Math.PI);
+      this.ctx.arc(unitState!.x, unitState!.y, size, 0, 2 * Math.PI);
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 4;
       this.ctx.stroke();
@@ -102,19 +102,20 @@ export class RenderingService {
     } 
   }
 
-  drawSelectedUnitHighlight(units: Set<Unit>, timer: number) {
+  drawSelectedUnitHighlight(units: Unit[], timer: number) {
     const circleOffset = 5;
     units.forEach((unit) => {
       this.cercleUnit(unit, 'red', unit.size + circleOffset, timer);
     });
-    if (units.size === 1) {
+    if (units.length === 1) {
       units.forEach((unit) => {
-        this.drawRays(unit.getStateByTick(timer).rays);
+        this.drawRays(unit, timer);
       })
     }
 
   }
 
 
-  constructor(private mapService: MapService) { }
+  constructor(private mapService: MapService) { }  
+
 }

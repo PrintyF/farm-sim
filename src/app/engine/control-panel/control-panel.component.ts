@@ -7,19 +7,26 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
-import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatest, map, Observable, take, tap } from 'rxjs';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Unit } from '../scene/classes/Unit';
+import { Unit, UnitState } from '../scene/classes/Unit';
 import { TICK_RATE, TIMER } from '../scene/configuration';
-import { Worldmap } from '../scene/classes/Worldmap';
 import { SimulationService } from '../scene/simulation/simulation.service';
 import { SelectionService } from '../scene/selection/selection.service';
+import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs'; 
+import { NeuralNetworkVisualizerComponent } from './neural-network-visualizer/neural-network-visualizer.component';
+
+export type UnitPanel = {
+  name : string,
+  color : string,
+  state: UnitState
+}
 
 @Component({
   selector: 'app-control-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatSliderModule, MatCardModule, MatDividerModule, FormsModule, MatInputModule, MatCheckboxModule],
+  imports: [NeuralNetworkVisualizerComponent, CommonModule, MatTabsModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatSliderModule, MatCardModule, MatDividerModule, FormsModule, MatInputModule, MatCheckboxModule],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss'
 })
@@ -31,23 +38,34 @@ export class ControlPanelComponent implements OnInit {
   population: Population | null = null;
   animationDuration = TIMER * TICK_RATE;
   tickRate = TICK_RATE;
-  $displaySlectedUnits : Observable<any>;
-
+  $displaySlectedUnits : Observable<UnitPanel[]>;
+  selectedIndex: number[] = [];
+  selectedIndexes: number[] = [];
   selectedFile: File | null = null;
 
   constructor(private sceneControlService: SceneControlService,
               private simulationSerice: SimulationService,
               private selectionService: SelectionService
   ) {
+    this.selectionService.selectedUnits.pipe(tap((units: Set<Unit>) => {
+      this.selectedIndexes = Array(units.size).fill(0);
+    })).subscribe();
     this.$displaySlectedUnits = combineLatest([this.simulationSerice.$timer, this.selectionService.selectedUnits]).pipe(
       map(([tick, units]: [number, Set<Unit>]) => {
-          return Array.from(units).map(unit => ({
+        this.selectedIndex = [];
+        return Array.from(units).map(unit => ({
           name: unit.name,
           color: unit.color,
-          state: unit.getStateByTick(tick),
+          state: unit.getStateByTick(tick)!,
         }));
-      })
+      }),
     );
+  }
+
+  onTabChange(event: MatTabChangeEvent, groupIndex: number): void {
+    if (event) {
+      this.selectedIndexes[groupIndex] = event.index;
+    }
   }
 
   ngOnInit(): void {

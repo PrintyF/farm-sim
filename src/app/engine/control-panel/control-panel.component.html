@@ -16,38 +16,39 @@
                 alpha fitness {{population?.alpha?.fitness| number: '1.1-1'}}    
         </div>
         @for (unit of $displaySlectedUnits | async; track $index) {
-            <div class="unit">
-                <mat-form-field>
-                    <mat-label (click)="openNeuralNetworkDisplay($index)">Name :</mat-label>
-                    <input matInput [disabled]="true" [value]="unit.name">
-                </mat-form-field>
-                <mat-form-field>
-                    <mat-label>Position</mat-label>
-                    <input matInput [disabled]="true" [value]="'x: ' + unit.state.x">
-                    <input matInput [disabled]="true" [value]="'y: ' + unit.state.y">
-                </mat-form-field>
-                <mat-form-field>
-                    <mat-label>angle</mat-label>
-                    <input matInput [disabled]="true" [value]="unit.state.angle!%360">
-                </mat-form-field>
-                <mat-form-field>
-                    <mat-label>speed</mat-label>
-                    <input matInput [disabled]="true" [value]="unit.state.speed">
-                </mat-form-field>
-                <mat-form-field>
-                    <mat-label>Color :</mat-label>
-                    <input matInput [disabled]="true" [value]="unit.color">
-                </mat-form-field>
-            </div>
-            @if (($displaySlectedUnits | async)?.length === 1) {
-                @for (layer of unit.state.neuralNetwork; track $index) {
-                    <div>
-                        @for (neuron of layer; track $index) {
-                            <span> {{neuron}} </span>
-                        }
+            <mat-tab-group (selectedTabChange)="onTabChange($event, $index)" [selectedIndex]="selectedIndexes[$index]">
+                <mat-tab label="Stats">            
+                    <div class="unit">
+                        <mat-form-field>
+                            <mat-label (click)="openNeuralNetworkDisplay($index)">Name :</mat-label>
+                            <input matInput [disabled]="true" [value]="unit.name">
+                        </mat-form-field>
+                        <mat-form-field>
+                            <mat-label>Position</mat-label>
+                            <input matInput [disabled]="true" [value]="'x: ' + unit.state.x">
+                            <input matInput [disabled]="true" [value]="'y: ' + unit.state.y">
+                        </mat-form-field>
+                        <mat-form-field>
+                            <mat-label>angle</mat-label>
+                            <input matInput [disabled]="true" [value]="unit.state.angle!%360">
+                        </mat-form-field>
+                        <mat-form-field>
+                            <mat-label>speed</mat-label>
+                            <input matInput [disabled]="true" [value]="unit.state.speed">
+                        </mat-form-field>
+                        <mat-form-field>
+                            <mat-label>Color :</mat-label>
+                            <input matInput [disabled]="true" [value]="unit.color">
+                        </mat-form-field>
                     </div>
-                }
-            }
+                </mat-tab>
+                <mat-tab label="Neural Network">
+                    @if(selectedIndexes[$index] === 1) {
+                        <app-neural-network-visualizer class="neural-network-visualizer" [unitPanel]="unit">
+                        </app-neural-network-visualizer>
+                    }
+                </mat-tab>
+            </mat-tab-group>
         }
     </mat-card-content>
 </mat-card>

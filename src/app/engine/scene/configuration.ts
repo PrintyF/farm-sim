@@ -4,7 +4,7 @@ export const OBJ_POS_X = 1000;
 export const OBJ_POS_Y = 500;
 export const OBJ_SIZE = 50;
 
-export const INITIAL_UNIT_POS_X = 0;
+export const INITIAL_UNIT_POS_X = 50;
 export const INITIAL_UNIT_POS_Y = 500;
 export const UNIT_SIZE = 15;
 

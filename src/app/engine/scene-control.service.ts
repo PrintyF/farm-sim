@@ -36,7 +36,7 @@ export class SceneControlService {
     if (this.population) {
       this.renderingService.drawUnits(this.population.units, this.simulationService.$timer.value);
     }
-    this.renderingService.drawSelectedUnitHighlight(this.selectionService.selectedUnits.value, this.simulationService.$timer.value);
+    this.renderingService.drawSelectedUnitHighlight(Array.from(this.selectionService.selectedUnits.value), this.simulationService.$timer.value);
 
     if (this.simulationService.isSimulationRunning.value) {
       requestAnimationFrame(() => this.renderLoop());
@@ -55,7 +55,7 @@ export class SceneControlService {
         }
       });
     }
-    this.renderingService.drawSelectedUnitHighlight(this.selectionService.selectedUnits.getValue(), timer);
+    this.renderLoop();
   }
 
   constructor(private mapService: MapService,
@@ -66,7 +66,6 @@ export class SceneControlService {
       
       mapObs.pipe(tap(() => {
         this.initPopulation();
-        console.log(this.population)  
       })).subscribe();
   
   }

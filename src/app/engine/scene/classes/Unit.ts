@@ -5,6 +5,15 @@ import { Worldmap } from './Worldmap';
 import { Ray } from './Ray';
 import { RayManager } from './RayManager';
 
+export type UnitState = {
+    x: number;
+    y: number;
+    angle: number;
+    speed: number;
+    rays: Ray[];
+    neuralNetworkStates: number[][];
+};
+
 export class Unit {
     name = uniqueNamesGenerator({dictionaries: [starWars]});
     color = uniqueNamesGenerator({dictionaries: [colors]});
@@ -12,7 +21,7 @@ export class Unit {
     rayManager: RayManager = new RayManager();
 
     size = UNIT_SIZE;
-    states: {x:number, y:number, angle: number, speed: number, neuralNetwork: number[][], rays: Ray[]}[] = [];
+    states: UnitState[] = [];
 
 
     neuralNetwork = new NeuralNetwork([4 + NUM_RAYS, 6 + NUM_RAYS,15,15, 5]);
@@ -35,7 +44,7 @@ export class Unit {
             this.processActions(action, () => (angle -= 5), () => (angle += 5), () => (speed += 1), () => (speed -= 1), speed);
     
             const { newX, newY } = this.computeNewPosition(x, y, angle, speed);
-            if (!this.wmap.isWall(newX / CELL_SIZE, newY / CELL_SIZE)) {
+            if (!this.wmap.isWall((newX + UNIT_SIZE) / CELL_SIZE, (newY + UNIT_SIZE) / CELL_SIZE)) {
                 x = newX;
                 y = newY;
             }
@@ -93,7 +102,7 @@ export class Unit {
             y: y,
             angle: angle,
             speed: speed,
-            neuralNetwork: neuralState,
+            neuralNetworkStates: neuralState,
             rays: this.rayManager.getRays()
         });
     }
@@ -106,8 +115,8 @@ export class Unit {
         
     distanceToPoint(x: number, y: number, tick: number): number {
         return Math.sqrt(
-            Math.pow(x - this.getStateByTick(tick).x, 2) +
-            Math.pow(y - this.getStateByTick(tick).y, 2)) - UNIT_SIZE;    
+            Math.pow(x - this.getStateByTick(tick)!.x, 2) +
+            Math.pow(y - this.getStateByTick(tick)!.y, 2)) - UNIT_SIZE;    
         }
         
     lastDistanceToPoint(x: number, y: number): number {
@@ -142,8 +151,8 @@ export class Unit {
          }
     }
     
-    getStateByTick(tick: number): {x: number, y: number, angle: number, speed: number, rays: Ray[]} {
-        return this.states.at(parseInt((tick/TICK_RATE).toFixed(0))) || this.states.at(-1) || {x: 0, y: 0, angle : 0, speed: 0, rays: []};
+    getStateByTick(tick: number): UnitState | undefined {
+        return this.states.at(parseInt((tick/TICK_RATE).toFixed(0))) || this.states.at(-1);
     }
 
     get fitness(): number {
