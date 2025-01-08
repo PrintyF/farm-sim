@@ -1,4 +1,4 @@
-export const POP_SIZE = 10;
+export const POP_SIZE = 50;
 
 export const OBJ_POS_X = 1000;
 export const OBJ_POS_Y = 500;

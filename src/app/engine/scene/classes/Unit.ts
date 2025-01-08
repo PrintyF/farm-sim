@@ -11,12 +11,13 @@ export type UnitState = {
     angle: number;
     speed: number;
     rays: Ray[];
-    neuralNetworkStates: number[][];
+    neuralNetwork: NeuralNetwork;
+    normalizedInputs: number[];
 };
 
 export class Unit {
     name = uniqueNamesGenerator({dictionaries: [starWars]});
-    color = uniqueNamesGenerator({dictionaries: [colors]});
+    color = "rgba(" + Math.random() * 255 + ', '+ Math.random() * 255 + ', '+ Math.random() * 255 + ', ' + 0.5 + ')';
 
     rayManager: RayManager = new RayManager();
 
@@ -24,7 +25,7 @@ export class Unit {
     states: UnitState[] = [];
 
 
-    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS, 6 + NUM_RAYS,15,15, 5]);
+    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS, 4 + NUM_RAYS, 4 + NUM_RAYS, 5]);
     
     constructor(private wmap: Worldmap) {
         this.computeUnit();
@@ -35,12 +36,11 @@ export class Unit {
     
         this.rayManager.updateRays(angle, x, y);
         this.states = [];
-        this.addState(x, y, angle, speed, []);
     
         for (let tick = 0; tick < TIMER; tick++) {
             const normalizedInputs = this.getNormalizedInputs(tick, x, y, angle, speed);   
-            const action = this.neuralNetwork.feedForward(normalizedInputs);
-
+            this.neuralNetwork.feedForward(normalizedInputs);
+            const action = this.neuralNetwork.layers.at(-1)!.outputs
             this.processActions(action, () => (angle -= 5), () => (angle += 5), () => (speed += 1), () => (speed -= 1), speed);
     
             const { newX, newY } = this.computeNewPosition(x, y, angle, speed);
@@ -51,8 +51,8 @@ export class Unit {
     
             this.rayManager.updateRays(angle * (Math.PI / 180), x, y);
             if (!this.hasReachedObjective(x, y)) {
-                const state = this.captureNeuralState(normalizedInputs);
-                this.addState(x, y, angle, speed, state);
+                const state = [normalizedInputs].concat(this.neuralNetwork.layers.map(layer => layer.outputs));
+                this.addState(x, y, angle, speed, normalizedInputs, this.neuralNetwork);
             }
         }
     }
@@ -79,7 +79,7 @@ export class Unit {
             { condition: () => action[2] === 1 && speed + 1 <= MAX_SPEED, execute: accelerate },
             { condition: () => action[3] === 1 && speed - 1 >= 0, execute: decelerate },
         ];
-    
+
         actionsMap.forEach(({ condition, execute }) => {
             if (condition()) execute();
         });
@@ -96,15 +96,17 @@ export class Unit {
         return this.lastDistanceToPoint(OBJ_POS_X, OBJ_POS_Y) < OBJ_SIZE;
     }
     
-    private addState(x: number, y: number, angle: number, speed: number, neuralState: number[][]): void {
-        this.states.push({
-            x: x,
-            y: y,
-            angle: angle,
-            speed: speed,
-            neuralNetworkStates: neuralState,
-            rays: this.rayManager.getRays()
-        });
+    private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[], neuralNetwork: NeuralNetwork): void {
+        const newState: UnitState = {
+            x,
+            y,
+            angle,
+            speed,
+            rays: [...this.rayManager.getRays()],
+            normalizedInputs: normalizedInputs,
+            neuralNetwork: neuralNetwork
+          };
+        this.states.push(newState);
     }
     
     private captureNeuralState(normalizedInputs: number[]): number[][] {
@@ -114,15 +116,21 @@ export class Unit {
     }
         
     distanceToPoint(x: number, y: number, tick: number): number {
-        return Math.sqrt(
-            Math.pow(x - this.getStateByTick(tick)!.x, 2) +
-            Math.pow(y - this.getStateByTick(tick)!.y, 2)) - UNIT_SIZE;    
-        }
+    return Math.sqrt(
+        Math.pow(x - this.getStateByTick(tick)!.x, 2) +
+        Math.pow(y - this.getStateByTick(tick)!.y, 2)) - UNIT_SIZE;    
+    }
         
     lastDistanceToPoint(x: number, y: number): number {
+        let posX = INITIAL_UNIT_POS_X;
+        let posY = INITIAL_UNIT_POS_Y;
+        if (this.states.at(-1)) {
+            posX = this.states.at(-1)!.x
+            posY = this.states.at(-1)!.y
+        }
         return Math.sqrt(
-            Math.pow(x - this.states.at(-1)!.x, 2) +
-            Math.pow(y - this.states.at(-1)!.y, 2)) - UNIT_SIZE;    
+            Math.pow(x - posX, 2) +
+            Math.pow(y - posY, 2)) - UNIT_SIZE;    
     }
         
     combine(unit: Unit): void {
@@ -152,7 +160,7 @@ export class Unit {
     }
     
     getStateByTick(tick: number): UnitState | undefined {
-        return this.states.at(parseInt((tick/TICK_RATE).toFixed(0))) || this.states.at(-1);
+        return this.states.at(parseInt((tick/TICK_RATE).toFixed(0)));
     }
 
     get fitness(): number {

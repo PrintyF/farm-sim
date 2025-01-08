@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, input, Input, ViewChild } from '@angular/core';
 import { UnitPanel } from '../control-panel.component';
 import { SimulationService } from '../../scene/simulation/simulation.service';
 import { tap } from 'rxjs';
@@ -24,21 +24,38 @@ export class NeuralNetworkVisualizerComponent {
     if (this.ctx) {
       this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
-
   }
 
-  drawLayer() {
-    const verticalSpacing = (this.ctx!.canvas.height - 2 * 10) / (this.unitPanel!.state.neuralNetworkStates[0].length - 1);
-    this.unitPanel?.state.neuralNetworkStates[0].forEach((neuronValue, index) => {
-      if (this.ctx) {
-        const x = this.ctx.canvas.width / 4;
-        const y = this.ctx.canvas.height + index * verticalSpacing;
+  drawLayer(layerSize: number, neuralNetworkSize: number, layerIndex: number, neuronIndex: number, neuronValue: number): void {
+    const neuronVisualizerSize = 4;
+    if (this.ctx) {  
+      const horizontalSpacing = (this.ctx.canvas.width - neuronVisualizerSize) / (layerSize);
+      const vertiacalSpacing = this.ctx.canvas.height / (neuralNetworkSize);
+      const x = horizontalSpacing * (neuronIndex + 1);
+      const y = vertiacalSpacing * (layerIndex + 1);
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, neuronVisualizerSize, 0, Math.PI * 2);
+      this.ctx.fillStyle = "rgba(0, 0, 0, " + neuronValue + ")";
+      this.ctx.fill()
+      this.ctx.beginPath();
+      this.ctx.arc(x,y, neuronVisualizerSize, 0, 2 * Math.PI);
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineWidth = 1;
+      this.ctx.stroke();
+      this.ctx.closePath();
+    }
+  }
 
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 10, 0, Math.PI * 2);
-        this.ctx.fillStyle = "black";
-        this.ctx.fill()
-      }
+  drawLayers(): void {
+
+    this.unitPanel?.state.normalizedInputs.forEach((neuronValue, inputIndex) => {
+      this.drawLayer(this.unitPanel!.state.normalizedInputs.length + 1, this.unitPanel!.state.neuralNetwork.layers.length + 2, 0, inputIndex, neuronValue);
+    });
+    this.unitPanel?.state.neuralNetwork.feedForward(this.unitPanel.state.normalizedInputs);
+    this.unitPanel?.state.neuralNetwork.layers.forEach((layer, layerIndex) => {
+      layer.outputs.forEach((neuronValue, neuronIndex) => {
+        this.drawLayer(layer.outputs.length + 1, this.unitPanel!.state.neuralNetwork.layers.length + 2, layerIndex + 1, neuronIndex, neuronValue);
+      })
     });
   }
 
@@ -46,19 +63,15 @@ export class NeuralNetworkVisualizerComponent {
   renderLoop(): void {
     if (this.ctx) {
       this.clearCanvas();
-      this.drawLayer();
+      this.drawLayers();
       if (this.simulationService.isSimulationRunning.value) {
         requestAnimationFrame(() => this.renderLoop());
-      }  
+      }
     }
   }
 
   ngAfterViewInit() {
     if (this.canvasRef) {
-      this.canvasRef.nativeElement.width = window.innerWidth;
-      this.canvasRef.nativeElement.height = window.innerHeight;
-      console.log(this.canvasRef.nativeElement.width, this.canvasRef.nativeElement.height)
-
       this.ctx = this.canvasRef.nativeElement.getContext('2d');
       this.simulationService.isSimulationRunning.pipe(tap((value) => {
         this.renderLoop();
