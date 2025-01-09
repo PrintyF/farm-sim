@@ -1,3 +1,4 @@
+import { CELL_SIZE, UNIT_SIZE } from "../configuration";
 import { MapData } from "../map/map.service";
 
 export type Wall = {x: number; y: number; width: number; height: number};
@@ -21,13 +22,13 @@ export class Worldmap {
     this.walls.push({ x, y, width, height });
   }
 
-  isWall(x: number, y: number): boolean {
+  isWall(x: number, y: number, unitSize: number): boolean {
     return this.walls.some(
       (wall) =>
-        x >= wall.x &&
-        x < wall.x + wall.width &&
-        y >= wall.y &&
-        y < wall.y + wall.height
+        x + unitSize > wall.x * CELL_SIZE &&
+        x < wall.x * CELL_SIZE + (wall.width * CELL_SIZE)  + unitSize &&
+        y  + unitSize  > wall.y * CELL_SIZE &&
+        y < wall.y * CELL_SIZE + (wall.height *  CELL_SIZE)  + unitSize 
     );
   }
 

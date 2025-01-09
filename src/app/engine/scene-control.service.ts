@@ -44,6 +44,7 @@ export class SceneControlService {
   }
 
   selectEvent(clickX: number, clickY: number, timer: number): void {
+    // console.log(this.mapService.wmap?.isWall(Math.floor(clickX), Math.floor(clickY), clickX, clickY, this.mapService.wmap?.walls);
     this.selectionService.selectedUnits.next(new Set());
     const tick = timer;
     if (this.population) {

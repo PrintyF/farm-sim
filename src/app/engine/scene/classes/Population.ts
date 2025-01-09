@@ -11,17 +11,6 @@ export class Population {
     }
   }
   
-  currentAlpha(tick: number): Unit {
-    let alpha = this.units[0];
-    this.units.forEach((unit) => {
-      if (unit != alpha && 
-          unit.distanceToPoint(OBJ_POS_X, OBJ_POS_Y, tick) < alpha.distanceToPoint(OBJ_POS_X, OBJ_POS_Y, tick)) {
-        alpha = unit;
-      }
-    });
-    return alpha;
-  }
-
   get alpha(): Unit { 
     let alpha = this.units[0];
     this.units.forEach((unit) => {

@@ -11,9 +11,5 @@ export class SelectionService {
 
   selectedUnits = new BehaviorSubject<Set<Unit>>(new Set());
 
-  toggleAlphaMarked(isMarked: boolean) {
-    this.alphaMarkedSubject.next(isMarked);
-  }
-
   constructor() { }
 }

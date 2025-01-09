@@ -30,6 +30,7 @@ export class RenderingService {
           );
         }
       });
+
       this.ctx.beginPath();
       this.ctx.arc(OBJ_POS_X, OBJ_POS_Y, OBJ_SIZE, 0, 2 * Math.PI);
       this.ctx.strokeStyle = "black";

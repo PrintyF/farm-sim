@@ -83,10 +83,6 @@ export class ControlPanelComponent implements OnInit {
     this.sceneControlService.toggleReproduction();
   }
 
-  markAlpha(checked: boolean): void {
-    this.selectionService.toggleAlphaMarked(checked);
-  }
-  
   onPlayButtonClick(): void {
     if (this.sceneControlService.population) {
       this.population = this.sceneControlService.population;
