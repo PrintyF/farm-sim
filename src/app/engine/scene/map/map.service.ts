@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Worldmap } from '../classes/Worldmap';
+import { WorldmapEntity } from '../type/WorldmapEntity';
 
 export interface MapData {
   height: number,
   width: number,
   start: { x: number; y: number };
-  objective: { x: number; y: number };
-  walls: { x: number; y: number; width: number; height: number }[];
+  objective: WorldmapEntity;
+  walls: WorldmapEntity[];
 }
 
 @Injectable({

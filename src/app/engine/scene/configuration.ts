@@ -11,7 +11,7 @@ export const UNIT_SIZE = 15;
 export const MAX_SPEED = 3;
 
 export const COMBINATION_FACTOR = 0.5;
-export const MUTATION_FACTOR = 0.05;
+export const MUTATION_FACTOR = 0.005;
 
 export const TICK_RATE = 0.01;
 export const TIMER = 6000;

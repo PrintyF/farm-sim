@@ -5,7 +5,7 @@
                 <button class="playButton" mat-flat-button (click)="onPlayButtonClick()">{{ playButtonText }}</button>
             </div>
             <mat-divider></mat-divider>
-                <mat-slider class="timeline" min="0" [max]="animationDuration" step="tickRate">
+                <mat-slider class="timeline" min="0" [max]="animationDuration" step="0.01">
                     <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="(time$ | async)">
                 </mat-slider>
                 <div class="timer">

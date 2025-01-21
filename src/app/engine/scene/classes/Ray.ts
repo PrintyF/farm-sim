@@ -1,5 +1,5 @@
 import { CELL_SIZE, MAX_RAY_LENGTH } from "../configuration";
-import { Wall } from "./Worldmap";
+import { Wall, WorldmapEntity } from "../type/WorldmapEntity";
 
 export class Ray {
   constructor(
@@ -17,12 +17,12 @@ export class Ray {
     };
   }
 
-  cast(walls: Wall[]): { x: number; y: number } | null {
+  cast(worldmapEntities: WorldmapEntity[]): { x: number; y: number } | null {
     let closestPoint: { x: number; y: number } | null = null;
     let closestDistance = MAX_RAY_LENGTH;
 
-    for (const wall of walls) {
-      const segments = this.wallToSegments(wall, CELL_SIZE);
+    for (const wall of worldmapEntities) {
+      const segments = this.worldmapEntityToSegments(wall, CELL_SIZE);
       for (const { x1, y1, x2, y2 } of segments) {
         const intersection = this.getIntersection(x1, y1, x2, y2);
         if (intersection) {
@@ -43,11 +43,11 @@ export class Ray {
     return closestPoint;
   }
 
-  private wallToSegments(wall: Wall, cellSize: number): { x1: number; y1: number; x2: number; y2: number }[] {
-    const x1 = wall.x * cellSize;
-    const y1 = wall.y * cellSize;
-    const x2 = x1 + wall.width * cellSize;
-    const y2 = y1 + wall.height * cellSize;
+  private worldmapEntityToSegments(worldmapEntity: WorldmapEntity, cellSize: number): { x1: number; y1: number; x2: number; y2: number }[] {
+    const x1 = worldmapEntity.x * cellSize;
+    const y1 = worldmapEntity.y * cellSize;
+    const x2 = x1 + worldmapEntity.width * cellSize;
+    const y2 = y1 + worldmapEntity.height * cellSize;
 
     return [
       { x1:x1, y1:y1, x2:x2, y2:y1 }, // Top
@@ -57,10 +57,10 @@ export class Ray {
     ];
   }
 
-  distanceToCollision(walls: Wall[]): number {
+  distanceToCollision(worldmapEntities: WorldmapEntity[]): number {
     let minDistance = this.maxLength;
-    walls.forEach((wall) => {
-      const collisionPoint = this.cast(walls);
+    worldmapEntities.forEach((worldmapEntity) => {
+      const collisionPoint = this.cast(worldmapEntities);
       if (collisionPoint) {
         const dx = collisionPoint.x - this.originX;
         const dy = collisionPoint.y - this.originY;

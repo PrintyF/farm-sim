@@ -26,7 +26,7 @@ export class Unit {
     fitnessModifier: number = 0;
 
 
-    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS, 4 + NUM_RAYS, 4 + NUM_RAYS, 5]);
+    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS*2, 8 + NUM_RAYS*2, 8 + NUM_RAYS*2, 5]);
 
     constructor(private wmap: Worldmap) {
         this.computeUnit();
@@ -45,25 +45,26 @@ export class Unit {
             this.processActions(action, () => (angle -= 5), () => (angle += 5), () => (speed += 1), () => (speed -= 1), speed);
 
             const { newX, newY } = this.computeNewPosition(x, y, angle, speed);
-            if (!this.wmap.isWall(newX, newY, UNIT_SIZE)) {
+            const hasReachedObjective = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, [this.wmap.objective]);
+            const hasReachedWall = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, this.wmap.walls);
+            if (!hasReachedWall && !hasReachedObjective) {
                 x = newX;
                 y = newY;
+            } else if (hasReachedObjective) {
+                this.fitnessModifier -= 10000;
             } else {
-                this.fitnessModifier += 1000;
+                this.fitnessModifier += 10000;
             }
 
             this.rayManager.updateRays(angle * (Math.PI / 180), x, y);
-            if (!this.hasReachedObjective(x, y)) {
-                const state = [normalizedInputs].concat(this.neuralNetwork.layers.map(layer => layer.outputs));
-                this.addState(x, y, angle, speed, normalizedInputs, this.neuralNetwork);
-            } else {
-                this.fitnessModifier -= 1000000;
-            }
+            [normalizedInputs].concat(this.neuralNetwork.layers.map(layer => layer.outputs));
+            this.addState(x, y, angle, speed, normalizedInputs, this.neuralNetwork);
         }
     }
 
     getNormalizedInputs(tick: number, x: number, y: number, angle: number, speed: number): number[] {
-        const raysInputs = this.rayManager.getRays().map(ray => ray.distanceToCollision(this.wmap.walls) / MAX_RAY_LENGTH);
+        let raysInputs = this.rayManager.getRays().map(ray => 1 - (ray.distanceToCollision(this.wmap.walls) / MAX_RAY_LENGTH));
+        raysInputs = raysInputs.concat(this.rayManager.getRays().map(ray => 1 - (ray.distanceToCollision([this.wmap.objective]) / MAX_RAY_LENGTH)));
         const normalizedDistance = 1 / (1 + (this.lastDistanceToPoint(OBJ_POS_X, OBJ_POS_Y) / 100));
         const normalizedSpeed = speed / MAX_SPEED;
         const normalizedAngle = Math.abs(angle % 360) / 360;
@@ -97,10 +98,6 @@ export class Unit {
         return { newX: x + deltaX, newY: y + deltaY };
     }
 
-    private hasReachedObjective(x: number, y: number): boolean {
-        return this.lastDistanceToPoint(OBJ_POS_X, OBJ_POS_Y) < OBJ_SIZE;
-    }
-
     private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[], neuralNetwork: NeuralNetwork): void {
         const newState: UnitState = {
             x,
@@ -112,12 +109,6 @@ export class Unit {
             neuralNetwork: neuralNetwork
         };
         this.states.push(newState);
-    }
-
-    private captureNeuralState(normalizedInputs: number[]): number[][] {
-        const state: number[][] = [normalizedInputs];
-        this.neuralNetwork.layers.forEach(layer => state.push(layer.outputs));
-        return state;
     }
 
     distanceToPoint(x: number, y: number, tick: number): number {

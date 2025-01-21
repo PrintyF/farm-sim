@@ -3,6 +3,8 @@ import { Unit } from '../classes/Unit';
 import { CELL_SIZE, OBJ_POS_X, OBJ_POS_Y, OBJ_SIZE } from '../configuration';
 import { Worldmap } from '../classes/Worldmap';
 import { MapService } from '../map/map.service';
+import { Objective, Wall, WorldmapEntity } from '../type/WorldmapEntity';
+import { Ray } from '../classes/Ray';
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +20,30 @@ export class RenderingService {
   }
 
   drawWorld(wmap: Worldmap) {
+    this.drawWalls(wmap.walls);
+    this.drawObjective(wmap.objective);
+  }
+
+  private drawObjective(objective: Objective) {
+    if (this.ctx) {
+      this.ctx.fillStyle = 'cyan';
+      this.ctx.beginPath();
+      this.ctx.fillRect(
+        objective.x * CELL_SIZE,
+        objective.y * CELL_SIZE,
+        objective.width * CELL_SIZE,
+        objective.height * CELL_SIZE);
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineWidth = 4;
+      this.ctx.stroke();
+      this.ctx.closePath();
+    }
+}
+
+  private drawWalls(walls: Wall[]) {
     if (this.ctx) {
       this.ctx.fillStyle = 'beige';
-      wmap.walls.forEach((wall) => {
+      walls.forEach((wall) => {
         if (this.ctx) {
           this.ctx.fillRect(
             wall.x * CELL_SIZE,
@@ -29,14 +52,7 @@ export class RenderingService {
             wall.height * CELL_SIZE
           );
         }
-      });
-
-      this.ctx.beginPath();
-      this.ctx.arc(OBJ_POS_X, OBJ_POS_Y, OBJ_SIZE, 0, 2 * Math.PI);
-      this.ctx.strokeStyle = "black";
-      this.ctx.lineWidth = 4;
-      this.ctx.stroke();
-      this.ctx.closePath();
+      });  
     }
   }
 
@@ -59,23 +75,37 @@ export class RenderingService {
     rays.forEach((ray) => {
       if (this.ctx) {
         if (this.mapService.wmap) {
-          const wallpoint = ray.cast(this.mapService.wmap.walls);
-          const endpoint = ray.getEndPoint();
-          if (wallpoint && endpoint) {
-            this.ctx.strokeStyle = 'yellow';
-            this.ctx.beginPath();
-            this.ctx.moveTo(ray.originX, ray.originY);
-            this.ctx.lineTo(wallpoint.x, wallpoint.y);
-            this.ctx.stroke();
-            this.ctx.beginPath();
-            this.ctx.strokeStyle = 'black';
-            this.ctx.moveTo(wallpoint.x, wallpoint.y);
-            this.ctx.lineTo(endpoint.x, endpoint.y);
-            this.ctx.stroke();
-          }  
+          const entityPoint = ray.cast(this.mapService.wmap!.walls.concat([this.mapService.wmap!.objective]));
+
+          this.rayFromCenterToObject(ray, entityPoint);
+          this.rayForWorldMapEntities(ray, [this.mapService.wmap!.objective], 'blue');
+          this.rayForWorldMapEntities(ray, this.mapService.wmap!.walls);  
         }
       }
     });
+  }
+
+  private rayFromCenterToObject(ray: Ray, wallpoint: {x: number, y: number} | null) {
+    if (this.ctx) {
+      this.ctx.strokeStyle = 'yellow';
+      this.ctx.beginPath();
+      this.ctx.moveTo(ray.originX, ray.originY);
+      this.ctx.lineTo(wallpoint!.x, wallpoint!.y);
+      this.ctx.stroke();  
+    }
+  }
+
+
+  private rayForWorldMapEntities(ray: Ray, worldmapEntities: WorldmapEntity[], color = 'black') {
+    const wallpoint = ray.cast(worldmapEntities);
+    const endpoint = ray.getEndPoint();
+    if (wallpoint && endpoint && this.ctx) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = color;
+      this.ctx.moveTo(wallpoint.x, wallpoint.y);
+      this.ctx.lineTo(endpoint.x, endpoint.y);
+      this.ctx.stroke();
+    }
   }
 
   drawUnit(unit: Unit, timer: number): void {
