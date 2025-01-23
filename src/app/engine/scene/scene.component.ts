@@ -41,7 +41,7 @@ export class SceneComponent implements AfterViewInit {
       const clickX = (event.clientX - rect.left) * scaleX;
       const clickY = (event.clientY - rect.top) * scaleY;
   
-      this.sceneControlService.selectEvent(clickX, clickY, this.simualationService.$timer.getValue());
+      this.sceneControlService.selectEvent(clickX, clickY, this.simualationService.timer());
     }
   }
 }

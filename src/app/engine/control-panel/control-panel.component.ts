@@ -1,7 +1,7 @@
 import { Population } from '../scene/classes/Population';
 import { MatInputModule } from '@angular/material/input';
 import { SceneControlService } from './../scene-control.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
@@ -32,16 +32,15 @@ export type UnitPanel = {
 })
 export class ControlPanelComponent implements OnInit {
   
-  time$: BehaviorSubject<number> | undefined;
   $selectedUnits: BehaviorSubject<Set<Unit>> | undefined;
-  alphaMarked = false;
+
+  $displaySlectedUnits : Observable<UnitPanel[]> = new Observable();
+
   population: Population | null = null;
   animationDuration = TIMER * TICK_RATE;
   tickRate = TICK_RATE;
-  $displaySlectedUnits : Observable<UnitPanel[]>;
-  selectedIndex: number[] = [];
+
   selectedIndexes: number[] = [];
-  selectedFile: File | null = null;
 
   constructor(private sceneControlService: SceneControlService,
               private simulationSerice: SimulationService,
@@ -50,16 +49,6 @@ export class ControlPanelComponent implements OnInit {
     this.selectionService.selectedUnits.pipe(tap((units: Set<Unit>) => {
       this.selectedIndexes = Array(units.size).fill(0);
     })).subscribe();
-    this.$displaySlectedUnits = combineLatest([this.simulationSerice.$timer, this.selectionService.selectedUnits]).pipe(
-      map(([tick, units]: [number, Set<Unit>]) => {
-        this.selectedIndex = [];
-        return Array.from(units).map(unit => ({
-          name: unit.name,
-          color: unit.color,
-          state: unit.getStateByTick(tick)!,
-        }));
-      }),
-    );
   }
 
   onTabChange(event: MatTabChangeEvent, groupIndex: number): void {
@@ -69,13 +58,9 @@ export class ControlPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.selectionService.alphaMarked$.subscribe((value) => {
-      this.alphaMarked = value;
-    });
     if (this.sceneControlService.population) {
       this.population = this.sceneControlService.population;
     }
-    this.time$ = this.simulationSerice.$timer;
     this.$selectedUnits = this.selectionService.selectedUnits;
   }
 
@@ -91,7 +76,7 @@ export class ControlPanelComponent implements OnInit {
   }
 
   warpTo(value: number) {
-    this.time$?.next(value);
+    this.simulationSerice.timer.set(value)
     this.sceneControlService.renderLoop();
   }
 
@@ -105,6 +90,9 @@ export class ControlPanelComponent implements OnInit {
   get playButtonText() : "Play" | "Pause" {
     return this.simulationSerice.isSimulationRunning.getValue() ? "Pause" : "Play";
   }
-  
+
+  get timer(): number {
+    return this.simulationSerice.timer();
+  }  
   
 }

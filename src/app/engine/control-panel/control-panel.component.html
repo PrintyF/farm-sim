@@ -6,10 +6,10 @@
             </div>
             <mat-divider></mat-divider>
                 <mat-slider class="timeline" min="0" [max]="animationDuration" step="0.01">
-                    <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="(time$ | async)">
+                    <input matSliderThumb (ngModelChange)="warpTo($event)" [ngModel]="timer">
                 </mat-slider>
                 <div class="timer">
-                    {{time$ | async | number: '1.1-1'}}
+                    {{timer | number: '1.1-1'}}
                 </div>
                 <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
                 alpha fitness {{population?.alpha?.fitness| number: '1.1-1'}}    

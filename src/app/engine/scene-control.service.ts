@@ -34,9 +34,9 @@ export class SceneControlService {
       this.renderingService.drawWorld(this.mapService.wmap);
     }
     if (this.population) {
-      this.renderingService.drawUnits(this.population.units, this.simulationService.$timer.value);
+      this.renderingService.drawUnits(this.population.units, this.simulationService.timer());
     }
-    this.renderingService.drawSelectedUnitHighlight(Array.from(this.selectionService.selectedUnits.value), this.simulationService.$timer.value);
+    this.renderingService.drawSelectedUnitHighlight(Array.from(this.selectionService.selectedUnits.value), this.simulationService.timer());
 
     if (this.simulationService.isSimulationRunning.value) {
       requestAnimationFrame(() => this.renderLoop());
@@ -44,7 +44,6 @@ export class SceneControlService {
   }
 
   selectEvent(clickX: number, clickY: number, timer: number): void {
-    // console.log(this.mapService.wmap?.isWall(Math.floor(clickX), Math.floor(clickY), clickX, clickY, this.mapService.wmap?.walls);
     this.selectionService.selectedUnits.next(new Set());
     const tick = timer;
     if (this.population) {
