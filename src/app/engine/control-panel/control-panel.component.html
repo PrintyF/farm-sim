@@ -14,12 +14,12 @@
                 <button mat-flat-button (click)="reproducePopulation()">reproduce</button>
                 alpha fitness {{population?.alpha?.fitness| number: '1.1-1'}}    
         </div>
-        @for (unit of $displaySlectedUnits | async; track $index) {
+        @for (unit of displaySelectedUnits(); track $index) {
             <mat-tab-group (selectedTabChange)="onTabChange($event, $index)" [selectedIndex]="selectedIndexes[$index]">
                 <mat-tab label="Stats">            
                     <div class="unit">
                         <mat-form-field>
-                            <mat-label (click)="openNeuralNetworkDisplay($index)">Name :</mat-label>
+                            <mat-label>Name :</mat-label>
                             <input matInput [disabled]="true" [value]="unit.name">
                         </mat-form-field>
                         <mat-form-field>

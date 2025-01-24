@@ -1,5 +1,5 @@
 import { tap } from 'rxjs';
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, ViewChild } from '@angular/core';
 import { SceneControlService } from '../scene-control.service';
 import { SimulationService } from './simulation/simulation.service';
 import { RenderingService } from './rendering/rendering.service';
@@ -24,11 +24,13 @@ export class SceneComponent implements AfterViewInit {
       this.canvasRef.nativeElement.height = window.innerHeight;
       this.renderingService.initContext(this.canvasRef.nativeElement.getContext('2d'));
     }
-    this.simualationService.isSimulationRunning.pipe((tap((value) => {
-      if (value) {
+    
+    effect(() => {
+      if (this.simualationService.isSimulationRunning()) {
         this.sceneControlService.renderLoop();
       }
-    }))).subscribe();
+
+    });
   }
   
 
@@ -41,7 +43,7 @@ export class SceneComponent implements AfterViewInit {
       const clickX = (event.clientX - rect.left) * scaleX;
       const clickY = (event.clientY - rect.top) * scaleY;
   
-      this.sceneControlService.selectEvent(clickX, clickY, this.simualationService.timer());
+      this.sceneControlService.selectEvent(clickX, clickY);
     }
   }
 }

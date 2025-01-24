@@ -36,22 +36,21 @@ export class SceneControlService {
     if (this.population) {
       this.renderingService.drawUnits(this.population.units, this.simulationService.timer());
     }
-    this.renderingService.drawSelectedUnitHighlight(Array.from(this.selectionService.selectedUnits.value), this.simulationService.timer());
+    this.renderingService.drawSelectedUnitHighlight(Array.from(this.selectionService.selectedUnits()), this.simulationService.timer());
 
-    if (this.simulationService.isSimulationRunning.value) {
+    if (this.simulationService.isSimulationRunning()) {
       requestAnimationFrame(() => this.renderLoop());
     }
   }
 
-  selectEvent(clickX: number, clickY: number, timer: number): void {
-    this.selectionService.selectedUnits.next(new Set());
-    const tick = timer;
+  selectEvent(clickX: number, clickY: number): void {
+    this.selectionService.selectedUnits.set(new Set());
     if (this.population) {
       this.population.units.forEach(unit => {
-        if (unit.distanceToPoint(clickX, clickY, tick) < unit.size) {
-          const currentUnits = this.selectionService.selectedUnits.getValue();
+        if (unit.distanceToPoint(clickX, clickY, this.simulationService.timer()) < unit.size) {
+          const currentUnits = this.selectionService.selectedUnits();
           currentUnits.add(unit);
-          this.selectionService.selectedUnits.next(currentUnits);
+          this.selectionService.selectedUnits.set(currentUnits);
         }
       });
     }
@@ -63,7 +62,6 @@ export class SceneControlService {
     private renderingService: RenderingService,
     private selectionService: SelectionService) {
       const mapObs = this.mapService.getMapData();
-      
       mapObs.pipe(tap(() => {
         this.initPopulation();
       })).subscribe();

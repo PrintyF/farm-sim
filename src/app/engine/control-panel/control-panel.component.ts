@@ -1,13 +1,13 @@
 import { Population } from '../scene/classes/Population';
 import { MatInputModule } from '@angular/material/input';
 import { SceneControlService } from './../scene-control.service';
-import { Component, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, Signal, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
-import { BehaviorSubject, combineLatest, map, Observable, take, tap } from 'rxjs';
+import { BehaviorSubject, tap } from 'rxjs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Unit, UnitState } from '../scene/classes/Unit';
@@ -32,11 +32,12 @@ export type UnitPanel = {
 })
 export class ControlPanelComponent implements OnInit {
   
-  $selectedUnits: BehaviorSubject<Set<Unit>> | undefined;
+  displaySelectedUnits: Signal<UnitPanel[]> = computed(() => {
+    return  Array.from(this.selectionService.selectedUnits()).map((unit) => ({
+      color: unit.color, 
+      name: unit.name,
+      state: unit.getStateByTick(this.simulationSerice.timer())!}))});
 
-  $displaySlectedUnits : Observable<UnitPanel[]> = new Observable();
-
-  population: Population | null = null;
   animationDuration = TIMER * TICK_RATE;
   tickRate = TICK_RATE;
 
@@ -46,9 +47,6 @@ export class ControlPanelComponent implements OnInit {
               private simulationSerice: SimulationService,
               private selectionService: SelectionService
   ) {
-    this.selectionService.selectedUnits.pipe(tap((units: Set<Unit>) => {
-      this.selectedIndexes = Array(units.size).fill(0);
-    })).subscribe();
   }
 
   onTabChange(event: MatTabChangeEvent, groupIndex: number): void {
@@ -58,10 +56,6 @@ export class ControlPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.sceneControlService.population) {
-      this.population = this.sceneControlService.population;
-    }
-    this.$selectedUnits = this.selectionService.selectedUnits;
   }
 
   reproducePopulation(): void {
@@ -69,10 +63,9 @@ export class ControlPanelComponent implements OnInit {
   }
 
   onPlayButtonClick(): void {
-    if (this.sceneControlService.population) {
-      this.population = this.sceneControlService.population;
-    }
     this.simulationSerice.toggleSimulation();
+    this.sceneControlService.renderLoop();
+
   }
 
   warpTo(value: number) {
@@ -80,15 +73,12 @@ export class ControlPanelComponent implements OnInit {
     this.sceneControlService.renderLoop();
   }
 
-  openNeuralNetworkDisplay(index: number): void {
-    let  t = new Set<Unit>();
-    if (this.$selectedUnits)
-      t.add(Array.from(this.$selectedUnits.value)[0])
-    this.$selectedUnits?.next(new Set(t));
+  get population(): Population | null {
+    return this.sceneControlService.population;
   }
 
   get playButtonText() : "Play" | "Pause" {
-    return this.simulationSerice.isSimulationRunning.getValue() ? "Pause" : "Play";
+    return this.simulationSerice.isSimulationRunning() ? "Pause" : "Play";
   }
 
   get timer(): number {

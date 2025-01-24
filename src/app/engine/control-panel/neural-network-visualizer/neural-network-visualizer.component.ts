@@ -1,4 +1,4 @@
-import { Component, ElementRef, input, Input, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, input, Input, ViewChild } from '@angular/core';
 import { UnitPanel } from '../control-panel.component';
 import { SimulationService } from '../../scene/simulation/simulation.service';
 import { tap } from 'rxjs';
@@ -64,7 +64,7 @@ export class NeuralNetworkVisualizerComponent {
     if (this.ctx) {
       this.clearCanvas();
       this.drawLayers();
-      if (this.simulationService.isSimulationRunning.value) {
+      if (this.simulationService.isSimulationRunning()) {
         requestAnimationFrame(() => this.renderLoop());
       }
     }
@@ -73,9 +73,11 @@ export class NeuralNetworkVisualizerComponent {
   ngAfterViewInit() {
     if (this.canvasRef) {
       this.ctx = this.canvasRef.nativeElement.getContext('2d');
-      this.simulationService.isSimulationRunning.pipe(tap((value) => {
-        this.renderLoop();
-      })).subscribe();
+      effect(() => {
+        if (this.simulationService.isSimulationRunning()) {
+          this.renderLoop();
+        }
+      });
     }
   }
 }

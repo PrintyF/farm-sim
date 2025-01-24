@@ -1,12 +1,12 @@
 import { Injectable, signal } from '@angular/core';
-import { BehaviorSubject, interval, Subscription, takeWhile } from 'rxjs';
+import { interval, Subscription, takeWhile } from 'rxjs';
 import { TICK_RATE, TIMER } from '../configuration';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SimulationService {
-  isSimulationRunning = new BehaviorSubject<boolean>(false);
+  isSimulationRunning = signal(false);
   timer = signal(0);
   timerSubscription: Subscription = new Subscription();
 
@@ -14,8 +14,8 @@ export class SimulationService {
 
 
   toggleSimulation(): void {
-    this.isSimulationRunning.next(!this.isSimulationRunning.getValue());
-    if (this.isSimulationRunning.getValue()) {
+    this.isSimulationRunning.update((toggle) => !toggle);
+    if (this.isSimulationRunning()) {
       this.timerSubscription = interval(TICK_RATE * 1000).pipe(
         takeWhile(() => this.timer() < TIMER * TICK_RATE)
       ).subscribe(() => {
