@@ -1,5 +1,5 @@
 import { CELL_SIZE, MAX_RAY_LENGTH } from "../configuration";
-import { Wall, WorldmapEntity } from "../type/WorldmapEntity";
+import { WorldmapEntity } from "../type/WorldmapEntity";
 
 export class Ray {
   constructor(
@@ -21,8 +21,8 @@ export class Ray {
     let closestPoint: { x: number; y: number } | null = null;
     let closestDistance = MAX_RAY_LENGTH;
 
-    for (const wall of worldmapEntities) {
-      const segments = this.worldmapEntityToSegments(wall, CELL_SIZE);
+    for (const worldmapEntity of worldmapEntities) {
+      const segments = this.worldmapEntityToSegments(worldmapEntity, CELL_SIZE);
       for (const { x1, y1, x2, y2 } of segments) {
         const intersection = this.getIntersection(x1, y1, x2, y2);
         if (intersection) {
@@ -59,18 +59,16 @@ export class Ray {
 
   distanceToCollision(worldmapEntities: WorldmapEntity[]): number {
     let minDistance = this.maxLength;
-    worldmapEntities.forEach((worldmapEntity) => {
-      const collisionPoint = this.cast(worldmapEntities);
-      if (collisionPoint) {
-        const dx = collisionPoint.x - this.originX;
-        const dy = collisionPoint.y - this.originY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    const collisionPoint = this.cast(worldmapEntities);
+    if (collisionPoint) {
+      const dx = collisionPoint.x - this.originX;
+      const dy = collisionPoint.y - this.originY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < minDistance) {
-          minDistance = distance;
-        }
+      if (distance < minDistance) {
+        minDistance = distance;
       }
-    });
+    }
     return minDistance;
   }
 

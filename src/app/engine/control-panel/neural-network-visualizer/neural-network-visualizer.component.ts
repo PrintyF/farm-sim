@@ -1,7 +1,6 @@
-import { Component, computed, effect, ElementRef, input, Input, ViewChild } from '@angular/core';
-import { UnitPanel } from '../control-panel.component';
+import { Component, effect, ElementRef, Input, ViewChild } from '@angular/core';
 import { SimulationService } from '../../scene/simulation/simulation.service';
-import { tap } from 'rxjs';
+import { Unit } from '../../scene/classes/Unit';
 
 @Component({
   selector: 'app-neural-network-visualizer',
@@ -11,13 +10,18 @@ import { tap } from 'rxjs';
   styleUrl: './neural-network-visualizer.component.scss'
 })
 export class NeuralNetworkVisualizerComponent {
-  @Input('unitPanel') unitPanel: UnitPanel | undefined;
+  @Input('unit') unit: Unit | undefined;
   @ViewChild('neuralNetworkCanvas') canvasRef: ElementRef<HTMLCanvasElement> | undefined;
 
   ctx: CanvasRenderingContext2D | null = null;
 
   constructor(private simulationService: SimulationService) {
-
+    effect(() => {
+      if (this.simulationService.isSimulationRunning()) {
+        console.log('test')
+        this.renderLoop();
+      }
+    });
   }
 
   clearCanvas(): void {
@@ -47,14 +51,13 @@ export class NeuralNetworkVisualizerComponent {
   }
 
   drawLayers(): void {
-
-    this.unitPanel?.state.normalizedInputs.forEach((neuronValue, inputIndex) => {
-      this.drawLayer(this.unitPanel!.state.normalizedInputs.length + 1, this.unitPanel!.state.neuralNetwork.layers.length + 2, 0, inputIndex, neuronValue);
+    this.unit?.unitState.normalizedInputs.forEach((neuronValue, inputIndex) => {
+      this.drawLayer(this.unit!.unitState.normalizedInputs.length + 1, this.unit!.neuralNetwork.layers.length + 2, 0, inputIndex, neuronValue);
     });
-    this.unitPanel?.state.neuralNetwork.feedForward(this.unitPanel.state.normalizedInputs);
-    this.unitPanel?.state.neuralNetwork.layers.forEach((layer, layerIndex) => {
+    this.unit?.neuralNetwork.feedForward(this.unit!.unitState.normalizedInputs);
+    this.unit?.neuralNetwork.layers.forEach((layer, layerIndex) => {
       layer.outputs.forEach((neuronValue, neuronIndex) => {
-        this.drawLayer(layer.outputs.length + 1, this.unitPanel!.state.neuralNetwork.layers.length + 2, layerIndex + 1, neuronIndex, neuronValue);
+        this.drawLayer(layer.outputs.length + 1, this.unit!.neuralNetwork.layers.length + 2, layerIndex + 1, neuronIndex, neuronValue);
       })
     });
   }
@@ -73,11 +76,6 @@ export class NeuralNetworkVisualizerComponent {
   ngAfterViewInit() {
     if (this.canvasRef) {
       this.ctx = this.canvasRef.nativeElement.getContext('2d');
-      effect(() => {
-        if (this.simulationService.isSimulationRunning()) {
-          this.renderLoop();
-        }
-      });
     }
   }
 }

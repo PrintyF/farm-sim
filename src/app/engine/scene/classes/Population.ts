@@ -1,4 +1,6 @@
 import { OBJ_POS_X, OBJ_POS_Y } from "../configuration";
+import { GeneticAlgorithm } from "./GeneticAlgorithm";
+import { MovementController } from "./MouvementController";
 import { Unit } from "./Unit";
 import { Worldmap } from "./Worldmap";
 
@@ -7,7 +9,7 @@ export class Population {
   
   constructor(size: number, wmap: Worldmap) {
     for (let i = 0; i < size; i++) {
-      this.units.push(new Unit(wmap))
+      this.units.push(new Unit(wmap, new MovementController()))
     }
   }
   
@@ -23,13 +25,16 @@ export class Population {
   }
   
   reproduce(): void {
+    console.time('computeUnit')
+    console.log(this.alpha)
     this.units.forEach((unit) => {
       if (unit != this.alpha) {
-        unit.combine(this.alpha);
-        unit.mutate();
+        GeneticAlgorithm.combine(unit.neuralNetwork, this.alpha.neuralNetwork);
+        GeneticAlgorithm.mutate(unit.neuralNetwork);
         unit.computeUnit();
       }
     });
+    console.timeEnd('computeUnit')
   }
   
 }

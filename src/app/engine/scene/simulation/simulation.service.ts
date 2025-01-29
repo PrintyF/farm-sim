@@ -1,5 +1,5 @@
-import { Injectable, signal } from '@angular/core';
-import { interval, Subscription, takeWhile } from 'rxjs';
+import { effect, Injectable, signal, untracked } from '@angular/core';
+import { BehaviorSubject, interval, Subscription, takeWhile, tap } from 'rxjs';
 import { TICK_RATE, TIMER } from '../configuration';
 
 @Injectable({
@@ -7,24 +7,34 @@ import { TICK_RATE, TIMER } from '../configuration';
 })
 export class SimulationService {
   isSimulationRunning = signal(false);
-  timer = signal(0);
+  timerSubject = new BehaviorSubject(0);
   timerSubscription: Subscription = new Subscription();
 
-  constructor() { }
+  constructor() {
+    effect(() => {
+      const isRunning = this.isSimulationRunning();
+      untracked(() => {
+        this.timerSubscription.unsubscribe();
+    
+        if (isRunning) {
+          this.timerSubscription = interval(TICK_RATE * 1000).pipe(
+            takeWhile(() => this.timer < TIMER * TICK_RATE),
+            tap(() => {
+              this.timerSubject.next(parseFloat((this.timer+ TICK_RATE).toFixed(2)));
+            })
+          ).subscribe();
+        }
+      });
+    });
+}
+
+get timer(): number {
+  return this.timerSubject.value;
+}
 
 
   toggleSimulation(): void {
     this.isSimulationRunning.update((toggle) => !toggle);
-    if (this.isSimulationRunning()) {
-      this.timerSubscription = interval(TICK_RATE * 1000).pipe(
-        takeWhile(() => this.timer() < TIMER * TICK_RATE)
-      ).subscribe(() => {
-        this.timer.update((time) => parseFloat((time + TICK_RATE).toFixed(2)));
-
-      });
-    } else {
-      this.timerSubscription.unsubscribe();
-    }
   }
 
 }

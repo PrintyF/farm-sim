@@ -12,7 +12,7 @@ export class Layer {
         this.bias = this.randomMatrix(1, this.outputCount)[0];
     }
 
-    randomMatrix(rows: number, cols: number): number[][] {
+    private randomMatrix(rows: number, cols: number): number[][] {
         return Array.from({ length: rows }, () =>
             Array.from({ length: cols }, () => Math.random() * 2 - 1)
         );

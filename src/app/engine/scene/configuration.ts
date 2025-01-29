@@ -1,4 +1,4 @@
-export const POP_SIZE = 50;
+export const POP_SIZE = 30;
 
 export const OBJ_POS_X = 1000;
 export const OBJ_POS_Y = 500;
@@ -19,5 +19,5 @@ export const MAP_SIZE = 3000;
 
 export const CELL_SIZE = 20;
 
-export const NUM_RAYS = 5;
-export const MAX_RAY_LENGTH = 1000;
+export const NUM_RAYS = 3;
+export const MAX_RAY_LENGTH = 300;

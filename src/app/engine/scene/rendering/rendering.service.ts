@@ -65,7 +65,8 @@ export class RenderingService {
   drawUnits(units: Unit[], timer: number): void {
     if (this.ctx) {
       for (let unit of units) {
-        this.drawUnit(unit, timer);
+        unit.setUnitToTick(timer);
+        this.drawUnit(unit);
       }
     }
   }
@@ -108,24 +109,20 @@ export class RenderingService {
     }
   }
 
-  drawUnit(unit: Unit, timer: number): void {
+  drawUnit(unit: Unit): void {
     if (this.ctx) {
-      const tick = timer;
       this.ctx.fillStyle = unit.color;
       this.ctx.beginPath();
-      const state = unit.getStateByTick(tick);
-      this.ctx.arc(state!.x, state!.y, unit.size, 0, Math.PI * 2);
+      this.ctx.arc(unit.unitState.x, unit.unitState.y, unit.size, 0, Math.PI * 2);
       this.ctx.fill();
-      this.cercleUnit(unit, "black", unit.size, timer);
+      this.cercleUnit(unit, "black", unit.size);
     }
   }
 
-  cercleUnit(unit: Unit, color: string, size: number, timer: number) {
+  cercleUnit(unit: Unit, color: string, size: number) {
     if (this.ctx) {
-      const tick = timer;
-      const unitState = unit.getStateByTick(tick);
       this.ctx.beginPath();
-      this.ctx.arc(unitState!.x, unitState!.y, size, 0, 2 * Math.PI);
+      this.ctx.arc(unit.unitState.x, unit.unitState.y, size, 0, 2 * Math.PI);
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 4;
       this.ctx.stroke();
@@ -133,10 +130,10 @@ export class RenderingService {
     } 
   }
 
-  drawSelectedUnitHighlight(units: Unit[], timer: number) {
+  drawSelectedUnitHighlight(units: Unit[], timer: number = 0) {
     const circleOffset = 5;
     units.forEach((unit) => {
-      this.cercleUnit(unit, 'red', unit.size + circleOffset, timer);
+      this.cercleUnit(unit, 'red', unit.size + circleOffset);
     });
     if (units.length === 1) {
       units.forEach((unit) => {

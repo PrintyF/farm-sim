@@ -24,16 +24,16 @@
                         </mat-form-field>
                         <mat-form-field>
                             <mat-label>Position</mat-label>
-                            <input matInput [disabled]="true" [value]="'x: ' + unit.state.x">
-                            <input matInput [disabled]="true" [value]="'y: ' + unit.state.y">
+                            <input matInput [disabled]="true" [value]="'x: ' + unit.unitState.x">
+                            <input matInput [disabled]="true" [value]="'y: ' + unit.unitState.y">
                         </mat-form-field>
                         <mat-form-field>
                             <mat-label>angle</mat-label>
-                            <input matInput [disabled]="true" [value]="unit.state.angle!%360">
+                            <input matInput [disabled]="true" [value]="unit.unitState.angle!%360">
                         </mat-form-field>
                         <mat-form-field>
                             <mat-label>speed</mat-label>
-                            <input matInput [disabled]="true" [value]="unit.state.speed">
+                            <input matInput [disabled]="true" [value]="unit.unitState.speed">
                         </mat-form-field>
                         <mat-form-field>
                             <mat-label>Color :</mat-label>
@@ -43,7 +43,7 @@
                 </mat-tab>
                 <mat-tab label="Neural Network">
                     @if(selectedIndexes[$index] === 1) {
-                        <app-neural-network-visualizer class="neural-network-visualizer" [unitPanel]="unit">
+                        <app-neural-network-visualizer class="neural-network-visualizer" [unit]="unit">
                         </app-neural-network-visualizer>
                     }
                 </mat-tab>

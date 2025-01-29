@@ -4,6 +4,8 @@ import { COMBINATION_FACTOR, INITIAL_UNIT_POS_X, INITIAL_UNIT_POS_Y, MAX_SPEED, 
 import { Worldmap } from './Worldmap';
 import { Ray } from './Ray';
 import { RayManager } from './RayManager';
+import { FitnessEvaluator } from './FitnessEvaluator';
+import { MovementController } from './MouvementController';
 
 export type UnitState = {
     x: number;
@@ -11,7 +13,6 @@ export type UnitState = {
     angle: number;
     speed: number;
     rays: Ray[];
-    neuralNetwork: NeuralNetwork;
     normalizedInputs: number[];
 };
 
@@ -24,11 +25,19 @@ export class Unit {
     size = UNIT_SIZE;
     states: UnitState[] = [];
     fitnessModifier: number = 0;
+    
+    unitState :UnitState = {
+        x: 0,
+        y: 0,
+        speed: 0,
+        angle: 0,
+        rays: [],
+        normalizedInputs: []
+    }
 
+    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS*2, 4 + NUM_RAYS*2, 4 + NUM_RAYS*2, 5]);
 
-    neuralNetwork = new NeuralNetwork([4 + NUM_RAYS*2, 8 + NUM_RAYS*2, 8 + NUM_RAYS*2, 5]);
-
-    constructor(private wmap: Worldmap) {
+    constructor(private wmap: Worldmap, private movementController: MovementController) {
         this.computeUnit();
     }
 
@@ -41,10 +50,14 @@ export class Unit {
         for (let tick = 0; tick < TIMER; tick++) {
             const normalizedInputs = this.getNormalizedInputs(tick, x, y, angle, speed);
             this.neuralNetwork.feedForward(normalizedInputs);
-            const action = this.neuralNetwork.layers.at(-1)!.outputs
-            this.processActions(action, () => (angle -= 5), () => (angle += 5), () => (speed += 1), () => (speed -= 1), speed);
+            const actions = this.neuralNetwork.layers.at(-1)!.outputs
+            this.movementController.processActions(actions, speed, {
+                turnRight:() => (angle -= 5),
+                turnLeft: () => (angle += 5),
+                accelerate: () => (speed += 1),
+                decelerate: () => (speed -= 1)});
 
-            const { newX, newY } = this.computeNewPosition(x, y, angle, speed);
+            const { newX, newY } = this.movementController.computeNewPosition(x, y, angle, speed);
             const hasReachedObjective = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, [this.wmap.objective]);
             const hasReachedWall = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, this.wmap.walls);
             if (!hasReachedWall && !hasReachedObjective) {
@@ -58,7 +71,7 @@ export class Unit {
 
             this.rayManager.updateRays(angle * (Math.PI / 180), x, y);
             [normalizedInputs].concat(this.neuralNetwork.layers.map(layer => layer.outputs));
-            this.addState(x, y, angle, speed, normalizedInputs, this.neuralNetwork);
+            this.addState(x, y, angle, speed, normalizedInputs);
         }
     }
 
@@ -78,43 +91,22 @@ export class Unit {
         ];
     }
 
-    private processActions(action: number[], turnLeft: () => void, turnRight: () => void, accelerate: () => void, decelerate: () => void, speed: number): void {
-        const actionsMap = [
-            { condition: () => action[0] === 1, execute: turnLeft },
-            { condition: () => action[1] === 1, execute: turnRight },
-            { condition: () => action[2] === 1 && speed + 1 <= MAX_SPEED, execute: accelerate },
-            { condition: () => action[3] === 1 && speed - 1 >= 0, execute: decelerate },
-        ];
-
-        actionsMap.forEach(({ condition, execute }) => {
-            if (condition()) execute();
-        });
-    }
-
-    private computeNewPosition(x: number, y: number, angle: number, speed: number): { newX: number, newY: number } {
-        const angleInRadians = angle * (Math.PI / 180);
-        const deltaX = Math.cos(angleInRadians) * (speed / MAX_SPEED);
-        const deltaY = Math.sin(angleInRadians) * (speed / MAX_SPEED);
-        return { newX: x + deltaX, newY: y + deltaY };
-    }
-
-    private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[], neuralNetwork: NeuralNetwork): void {
+    private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[]): void {
         const newState: UnitState = {
             x,
             y,
             angle,
             speed,
             rays: [...this.rayManager.getRays()],
-            normalizedInputs: normalizedInputs,
-            neuralNetwork: neuralNetwork
+            normalizedInputs: normalizedInputs
         };
         this.states.push(newState);
     }
 
     distanceToPoint(x: number, y: number, tick: number): number {
         return Math.sqrt(
-            Math.pow(x - this.getStateByTick(tick)!.x, 2) +
-            Math.pow(y - this.getStateByTick(tick)!.y, 2)) - UNIT_SIZE;
+            Math.pow(x - this.unitState.x, 2) +
+            Math.pow(y - this.unitState.y, 2)) - UNIT_SIZE;
     }
 
     lastDistanceToPoint(x: number, y: number): number {
@@ -129,38 +121,17 @@ export class Unit {
             Math.pow(y - posY, 2)) - UNIT_SIZE;
     }
 
-    combine(unit: Unit): void {
-        for (let i = 0; i < this.neuralNetwork.layers.length; i++) {
-            for (let j = 0; j < this.neuralNetwork.layers[i].bias.length; j++) {
-                this.neuralNetwork.layers[i].bias[j] = Math.random() < COMBINATION_FACTOR ? this.neuralNetwork.layers[i].bias[j] : unit.neuralNetwork.layers[i].bias[j]
-            }
-            for (let j = 0; j < this.neuralNetwork.layers[i].weights.length; j++) {
-                for (let k = 0; k < this.neuralNetwork.layers[i].weights[j].length; k++) {
-                    this.neuralNetwork.layers[i].weights[j][k] = Math.random() < COMBINATION_FACTOR ? this.neuralNetwork.layers[i].weights[j][k] : unit.neuralNetwork.layers[i].weights[j][k];
-                }
-            }
-        }
-    }
-
-    mutate(): void {
-        for (let i = 0; i < this.neuralNetwork.layers.length; i++) {
-            for (let j = 0; j < this.neuralNetwork.layers[i].bias.length; j++) {
-                this.neuralNetwork.layers[i].bias[j] = Math.random() < MUTATION_FACTOR ? Math.random() * 2 - 1 : this.neuralNetwork.layers[i].bias[j];
-            }
-            for (let j = 0; j < this.neuralNetwork.layers[i].weights.length; j++) {
-                for (let k = 0; k < this.neuralNetwork.layers[i].weights[j].length; k++) {
-                    this.neuralNetwork.layers[i].weights[j][k] = Math.random() < MUTATION_FACTOR ? Math.random() * 2 - 1 : this.neuralNetwork.layers[i].weights[j][k];
-                }
-            }
-        }
-    }
-
     getStateByTick(tick: number): UnitState | undefined {
         return this.states.at(parseInt((tick / TICK_RATE).toFixed(0)));
     }
 
+    setUnitToTick(tick: number): void {
+        this.unitState = this.getStateByTick(tick)!;
+    }
+
+
     get fitness(): number {
-        return this.lastDistanceToPoint(OBJ_POS_X, OBJ_POS_Y) * (this.states.length / 10) + this.fitnessModifier;
+        return FitnessEvaluator.calculateFitness(this);
     }
 
 }

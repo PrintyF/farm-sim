@@ -7,7 +7,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
-import { BehaviorSubject, tap } from 'rxjs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Unit, UnitState } from '../scene/classes/Unit';
@@ -16,10 +15,12 @@ import { SimulationService } from '../scene/simulation/simulation.service';
 import { SelectionService } from '../scene/selection/selection.service';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs'; 
 import { NeuralNetworkVisualizerComponent } from './neural-network-visualizer/neural-network-visualizer.component';
+import { NeuralNetwork } from '../../neural-network/NeuralNetwork';
 
 export type UnitPanel = {
   name : string,
   color : string,
+  neuralNetwork: NeuralNetwork,
   state: UnitState
 }
 
@@ -32,11 +33,9 @@ export type UnitPanel = {
 })
 export class ControlPanelComponent implements OnInit {
   
-  displaySelectedUnits: Signal<UnitPanel[]> = computed(() => {
-    return  Array.from(this.selectionService.selectedUnits()).map((unit) => ({
-      color: unit.color, 
-      name: unit.name,
-      state: unit.getStateByTick(this.simulationSerice.timer())!}))});
+  displaySelectedUnits: Signal<Unit[]> = computed(() => {
+    return  Array.from(this.selectionService.selectedUnits());
+  });
 
   animationDuration = TIMER * TICK_RATE;
   tickRate = TICK_RATE;
@@ -64,12 +63,11 @@ export class ControlPanelComponent implements OnInit {
 
   onPlayButtonClick(): void {
     this.simulationSerice.toggleSimulation();
-    this.sceneControlService.renderLoop();
 
   }
 
   warpTo(value: number) {
-    this.simulationSerice.timer.set(value)
+    this.simulationSerice.timerSubject.next(value)
     this.sceneControlService.renderLoop();
   }
 
@@ -82,7 +80,7 @@ export class ControlPanelComponent implements OnInit {
   }
 
   get timer(): number {
-    return this.simulationSerice.timer();
+    return this.simulationSerice.timer;
   }  
   
 }
