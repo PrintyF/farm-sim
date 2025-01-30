@@ -14,6 +14,8 @@ export type UnitState = {
     speed: number;
     rays: Ray[];
     normalizedInputs: number[];
+    hasReachedWall: boolean;
+    fitness:  number
 };
 
 export class Unit {
@@ -25,6 +27,7 @@ export class Unit {
     size = UNIT_SIZE;
     states: UnitState[] = [];
     fitnessModifier: number = 0;
+    isInWall: boolean = false;
     
     unitState :UnitState = {
         x: 0,
@@ -32,7 +35,9 @@ export class Unit {
         speed: 0,
         angle: 0,
         rays: [],
-        normalizedInputs: []
+        normalizedInputs: [],
+        hasReachedWall: false,
+        fitness: 0
     }
 
     neuralNetwork = new NeuralNetwork([4 + NUM_RAYS*2, 4 + NUM_RAYS*2, 4 + NUM_RAYS*2, 5]);
@@ -43,11 +48,11 @@ export class Unit {
 
     computeUnit() {
         let angle = 0, speed = 0, x = INITIAL_UNIT_POS_X, y = INITIAL_UNIT_POS_Y;
-
+        this.fitnessModifier = 0;
         this.rayManager.updateRays(angle, x, y);
         this.states = [];
 
-        for (let tick = 0; tick < TIMER; tick++) {
+        for (let tick = 0; tick <= TIMER; tick++) {
             const normalizedInputs = this.getNormalizedInputs(tick, x, y, angle, speed);
             this.neuralNetwork.feedForward(normalizedInputs);
             const actions = this.neuralNetwork.layers.at(-1)!.outputs
@@ -60,18 +65,21 @@ export class Unit {
             const { newX, newY } = this.movementController.computeNewPosition(x, y, angle, speed);
             const hasReachedObjective = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, [this.wmap.objective]);
             const hasReachedWall = this.wmap.hasReachedEntity(newX, newY, UNIT_SIZE, this.wmap.walls);
+            hasReachedWall ? this.isInWall = true: this.isInWall = false;
             if (!hasReachedWall && !hasReachedObjective) {
                 x = newX;
                 y = newY;
             } else if (hasReachedObjective) {
-                this.fitnessModifier -= 10000;
+                this.fitnessModifier -= 100000;
+            } else if(!hasReachedObjective && x === newX && y === newY) {
+                this.fitnessModifier += 10;
             } else {
                 this.fitnessModifier += 10000;
             }
 
             this.rayManager.updateRays(angle * (Math.PI / 180), x, y);
             [normalizedInputs].concat(this.neuralNetwork.layers.map(layer => layer.outputs));
-            this.addState(x, y, angle, speed, normalizedInputs);
+            this.addState(x, y, angle, speed, normalizedInputs, hasReachedWall, this.fitnessModifier);
         }
     }
 
@@ -91,14 +99,16 @@ export class Unit {
         ];
     }
 
-    private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[]): void {
+    private addState(x: number, y: number, angle: number, speed: number, normalizedInputs: number[], hasReachedWall: boolean, fitness: number): void {
         const newState: UnitState = {
             x,
             y,
             angle,
             speed,
             rays: [...this.rayManager.getRays()],
-            normalizedInputs: normalizedInputs
+            normalizedInputs: normalizedInputs,
+            hasReachedWall,
+            fitness
         };
         this.states.push(newState);
     }

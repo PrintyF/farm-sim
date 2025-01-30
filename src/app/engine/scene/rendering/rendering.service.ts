@@ -111,7 +111,7 @@ export class RenderingService {
 
   drawUnit(unit: Unit): void {
     if (this.ctx) {
-      this.ctx.fillStyle = unit.color;
+      this.ctx.fillStyle = unit.unitState.hasReachedWall ? "black" :unit.color;
       this.ctx.beginPath();
       this.ctx.arc(unit.unitState.x, unit.unitState.y, unit.size, 0, Math.PI * 2);
       this.ctx.fill();

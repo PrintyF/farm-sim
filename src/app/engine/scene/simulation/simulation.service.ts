@@ -18,7 +18,7 @@ export class SimulationService {
     
         if (isRunning) {
           this.timerSubscription = interval(TICK_RATE * 1000).pipe(
-            takeWhile(() => this.timer < TIMER * TICK_RATE),
+              takeWhile(() => this.timer < TIMER * TICK_RATE),
             tap(() => {
               this.timerSubject.next(parseFloat((this.timer+ TICK_RATE).toFixed(2)));
             })

@@ -71,6 +71,10 @@ export class ControlPanelComponent implements OnInit {
     this.sceneControlService.renderLoop();
   }
 
+  selectUnit(unit: Unit) {
+    this.selectionService.selectedUnits.set(new Set<Unit>([unit]))
+  }
+
   get population(): Population | null {
     return this.sceneControlService.population;
   }
